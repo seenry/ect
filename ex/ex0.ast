@@ -1,0 +1,118 @@
+TranslationUnitDecl 0x8eec71008 <<invalid sloc>> <invalid sloc>
+|-TypedefDecl 0x8eec718c8 <<invalid sloc>> <invalid sloc> implicit __int128_t '__int128'
+| `-BuiltinType 0x8eec715d0 '__int128'
+|-TypedefDecl 0x8eec71938 <<invalid sloc>> <invalid sloc> implicit __uint128_t 'unsigned __int128'
+| `-BuiltinType 0x8eec715f0 'unsigned __int128'
+|-TypedefDecl 0x8eec71c48 <<invalid sloc>> <invalid sloc> implicit __NSConstantString 'struct __NSConstantString_tag'
+| `-RecordType 0x8eec71c10 'struct __NSConstantString_tag' canonical
+|   `-Record 0x8eec71990 '__NSConstantString_tag'
+|-TypedefDecl 0x8eec71858 <<invalid sloc>> <invalid sloc> implicit __builtin_va_list 'void *'
+| `-PointerType 0x8eec717b0 'void *'
+|   `-BuiltinType 0x8eec71070 'void'
+|-TypedefDecl 0x8eec71cb8 <ex/types.h:3:1, col:23> col:23 referenced __u8 'unsigned char'
+| `-BuiltinType 0x8eec71170 'unsigned char'
+|-TypedefDecl 0x8eec71d28 <line:4:1, col:24> col:24 referenced __u16 'unsigned short'
+| `-BuiltinType 0x8eec71190 'unsigned short'
+|-TypedefDecl 0x8eec71d98 <line:5:1, col:22> col:22 referenced __u32 'unsigned int'
+| `-BuiltinType 0x8eec711b0 'unsigned int'
+|-EnumDecl 0x8eec71df0 <line:7:1, line:13:1> line:7:6 xdp_action
+| |-EnumConstantDecl 0x8eec71ed0 <line:8:2, col:16> col:2 referenced XDP_ABORTED 'int'
+| | `-ConstantExpr 0x8eec71eb0 <col:16> 'int'
+| |   |-value: Int 0
+| |   `-IntegerLiteral 0x8eec71e90 <col:16> 'int' 0
+| |-EnumConstantDecl 0x8eec71f28 <line:9:2> col:2 referenced XDP_DROP 'int'
+| |-EnumConstantDecl 0x8eec71f80 <line:10:2> col:2 referenced XDP_PASS 'int'
+| |-EnumConstantDecl 0x8eed44000 <line:11:2> col:2 XDP_TX 'int'
+| `-EnumConstantDecl 0x8eed44058 <line:12:2> col:2 XDP_REDIRECT 'int'
+|-RecordDecl 0x8eed440d0 <line:15:1, line:24:1> line:15:8 struct xdp_md definition
+| |-FieldDecl 0x8eed44188 <line:16:2, col:8> col:8 referenced data '__u32':'unsigned int'
+| |-FieldDecl 0x8eed441f0 <line:17:2, col:8> col:8 referenced data_end '__u32':'unsigned int'
+| |-FieldDecl 0x8eed44258 <line:18:2, col:8> col:8 data_meta '__u32':'unsigned int'
+| |-FieldDecl 0x8eed442c0 <line:20:2, col:8> col:8 ingress_ifindex '__u32':'unsigned int'
+| |-FieldDecl 0x8eed44328 <line:21:2, col:8> col:8 rx_queue_index '__u32':'unsigned int'
+| `-FieldDecl 0x8eed44390 <line:23:2, col:8> col:8 egress_ifindex '__u32':'unsigned int'
+|-TypedefDecl 0x8eed44418 <line:30:1, col:25> col:25 referenced __be16 '__u16':'unsigned short'
+| `-TypedefType 0x8eed443e0 '__u16' sugar
+|   |-Typedef 0x8eec71d28 '__u16'
+|   `-BuiltinType 0x8eec71190 'unsigned short'
+|-RecordDecl 0x8eed44470 <line:32:1, line:36:1> line:32:8 struct ethhdr definition
+| |-PackedAttr 0x8eed44738 <line:36:18>
+| |-FieldDecl 0x8eed445a8 <line:33:2, col:31> col:16 h_dest 'unsigned char[6]'
+| |-FieldDecl 0x8eed44660 <line:34:2, col:33> col:16 h_source 'unsigned char[6]'
+| `-FieldDecl 0x8eed446e8 <line:35:2, col:10> col:10 referenced h_proto '__be16':'unsigned short'
+|-FunctionDecl 0x8eed449a8 <ex/ex0.c:11:19, line:32:1> line:13:5 used bpf_ex0 'int (struct xdp_md *)'
+| |-ParmVarDecl 0x8eed44890 <col:13, col:28> col:28 used ctx 'struct xdp_md *'
+| |-CompoundStmt 0x8eed47760 <col:33, line:32:1>
+| | |-DeclStmt 0x8eed44cb8 <line:14:3, col:39>
+| | | `-VarDecl 0x8eed44b50 <col:3, col:35> col:9 used data 'void *' cinit
+| | |   `-CStyleCastExpr 0x8eed44c90 <col:16, col:35> 'void *' <IntegralToPointer>
+| | |     `-CStyleCastExpr 0x8eed44c50 <col:24, col:35> 'long' <IntegralCast>
+| | |       `-ImplicitCastExpr 0x8eed44c38 <col:30, col:35> '__u32':'unsigned int' <LValueToRValue> part_of_explicit_cast
+| | |         `-MemberExpr 0x8eed44bf0 <col:30, col:35> '__u32':'unsigned int' lvalue ->data 0x8eed44188
+| | |           `-ImplicitCastExpr 0x8eed44bd8 <col:30> 'struct xdp_md *' <LValueToRValue>
+| | |             `-DeclRefExpr 0x8eed44bb8 <col:30> 'struct xdp_md *' lvalue ParmVar 0x8eed44890 'ctx' 'struct xdp_md *'
+| | |-DeclStmt 0x8eed44e50 <line:15:3, col:47>
+| | | `-VarDecl 0x8eed44ce8 <col:3, col:39> col:9 used data_end 'void *' cinit
+| | |   `-CStyleCastExpr 0x8eed44e28 <col:20, col:39> 'void *' <IntegralToPointer>
+| | |     `-CStyleCastExpr 0x8eed44de8 <col:28, col:39> 'long' <IntegralCast>
+| | |       `-ImplicitCastExpr 0x8eed44dd0 <col:34, col:39> '__u32':'unsigned int' <LValueToRValue> part_of_explicit_cast
+| | |         `-MemberExpr 0x8eed44d88 <col:34, col:39> '__u32':'unsigned int' lvalue ->data_end 0x8eed441f0
+| | |           `-ImplicitCastExpr 0x8eed44d70 <col:34> 'struct xdp_md *' <LValueToRValue>
+| | |             `-DeclRefExpr 0x8eed44d50 <col:34> 'struct xdp_md *' lvalue ParmVar 0x8eed44890 'ctx' 'struct xdp_md *'
+| | |-DeclStmt 0x8eed44fc8 <line:17:3, col:28>
+| | | `-VarDecl 0x8eed44f10 <col:3, col:24> col:18 used hdr 'struct ethhdr *' cinit
+| | |   `-ImplicitCastExpr 0x8eed44fb0 <col:24> 'struct ethhdr *' <BitCast>
+| | |     `-ImplicitCastExpr 0x8eed44f98 <col:24> 'void *' <LValueToRValue>
+| | |       `-DeclRefExpr 0x8eed44f78 <col:24> 'void *' lvalue Var 0x8eed44b50 'data' 'void *'
+| | |-IfStmt 0x8eed471b8 <line:19:3, line:21:3>
+| | | |-BinaryOperator 0x8eed47150 <line:19:7, col:42> 'int' '>'
+| | | | |-BinaryOperator 0x8eed470f8 <col:7, col:38> 'void *' '+'
+| | | | | |-BinaryOperator 0x8eed470b8 <col:7, col:34> 'void *' '+'
+| | | | | | |-ImplicitCastExpr 0x8eed47038 <col:7> 'void *' <LValueToRValue>
+| | | | | | | `-DeclRefExpr 0x8eed44fe0 <col:7> 'void *' lvalue Var 0x8eed44b50 'data' 'void *'
+| | | | | | `-UnaryExprOrTypeTraitExpr 0x8eed47018 <col:14, col:34> '__size_t':'unsigned long' sizeof 'struct ethhdr'
+| | | | | `-IntegerLiteral 0x8eed470d8 <col:38> 'int' 1
+| | | | `-ImplicitCastExpr 0x8eed47138 <col:42> 'void *' <LValueToRValue>
+| | | |   `-DeclRefExpr 0x8eed47118 <col:42> 'void *' lvalue Var 0x8eed44ce8 'data_end' 'void *'
+| | | `-CompoundStmt 0x8eed471a0 <col:52, line:21:3>
+| | |   `-ReturnStmt 0x8eed47190 <line:20:5, col:12>
+| | |     `-DeclRefExpr 0x8eed47170 <col:12> 'int' EnumConstant 0x8eec71ed0 'XDP_ABORTED' 'int'
+| | |-DeclStmt 0x8eed472f0 <line:23:3, col:32>
+| | | `-VarDecl 0x8eed47208 <col:3, col:25> col:9 used protocol '__u16':'unsigned short' cinit
+| | |   `-ImplicitCastExpr 0x8eed472d8 <col:20, col:25> '__be16':'unsigned short' <LValueToRValue>
+| | |     `-MemberExpr 0x8eed472a8 <col:20, col:25> '__be16':'unsigned short' lvalue ->h_proto 0x8eed446e8
+| | |       `-ImplicitCastExpr 0x8eed47290 <col:20> 'struct ethhdr *' <LValueToRValue>
+| | |         `-DeclRefExpr 0x8eed47270 <col:20> 'struct ethhdr *' lvalue Var 0x8eed44f10 'hdr' 'struct ethhdr *'
+| | `-IfStmt 0x8eed47730 <line:25:3, line:31:3> has_else
+| |   |-BinaryOperator 0x8eed47378 <line:25:7, ex/types.h:27:18> 'int' '=='
+| |   | |-ImplicitCastExpr 0x8eed47360 <ex/ex0.c:25:7> 'int' <IntegralCast>
+| |   | | `-ImplicitCastExpr 0x8eed47348 <col:7> '__u16':'unsigned short' <LValueToRValue>
+| |   | |   `-DeclRefExpr 0x8eed47308 <col:7> '__u16':'unsigned short' lvalue Var 0x8eed47208 'protocol' '__u16':'unsigned short'
+| |   | `-IntegerLiteral 0x8eed47328 <ex/types.h:27:18> 'int' 2048
+| |   |-CompoundStmt 0x8eed476c0 <ex/ex0.c:25:29, line:29:3>
+| |   | |-DeclStmt 0x8eed474a8 <line:26:5, col:43>
+| |   | | `-VarDecl 0x8eed473b0 <col:5, col:42> col:11 used x 'void *' cinit
+| |   | |   `-BinaryOperator 0x8eed47488 <col:15, col:42> 'void *' '+'
+| |   | |     |-ImplicitCastExpr 0x8eed47470 <col:15> 'void *' <LValueToRValue>
+| |   | |     | `-DeclRefExpr 0x8eed47418 <col:15> 'void *' lvalue Var 0x8eed44b50 'data' 'void *'
+| |   | |     `-UnaryExprOrTypeTraitExpr 0x8eed47450 <col:22, col:42> '__size_t':'unsigned long' sizeof 'struct ethhdr'
+| |   | |-BinaryOperator 0x8eed47670 <line:27:5, col:24> '__u8':'unsigned char' '='
+| |   | | |-UnaryOperator 0x8eed475e0 <col:5, col:14> '__u8':'unsigned char' lvalue prefix '*' cannot overflow
+| |   | | | `-CStyleCastExpr 0x8eed475b8 <col:6, col:14> '__u8 *' <BitCast>
+| |   | | |   `-ImplicitCastExpr 0x8eed475a0 <col:14> 'void *' <LValueToRValue> part_of_explicit_cast
+| |   | | |     `-DeclRefExpr 0x8eed474f8 <col:14> 'void *' lvalue Var 0x8eed473b0 'x' 'void *'
+| |   | | `-ImplicitCastExpr 0x8eed47658 <col:18, col:24> '__u8':'unsigned char' <IntegralCast>
+| |   | |   `-BinaryOperator 0x8eed47638 <col:18, col:24> 'int' '+'
+| |   | |     |-IntegerLiteral 0x8eed475f8 <col:18> 'int' 15
+| |   | |     `-IntegerLiteral 0x8eed47618 <col:24> 'int' 240
+| |   | `-ReturnStmt 0x8eed476b0 <line:28:5, col:12>
+| |   |   `-DeclRefExpr 0x8eed47690 <col:12> 'int' EnumConstant 0x8eec71f80 'XDP_PASS' 'int'
+| |   `-CompoundStmt 0x8eed47718 <line:29:10, line:31:3>
+| |     `-ReturnStmt 0x8eed47708 <line:30:5, col:12>
+| |       `-DeclRefExpr 0x8eed476e8 <col:12> 'int' EnumConstant 0x8eec71f28 'XDP_DROP' 'int'
+| |-SectionAttr 0x8eed44a58 <line:11:34, col:46> section "xdp"
+| `-UsedAttr 0x8eed44ac8 <col:49>
+`-VarDecl 0x8eed47810 <line:34:1, col:34> col:6 used _license 'char[4]' cinit
+  |-StringLiteral 0x8eed47940 <col:34> 'char[4]' "GPL"
+  |-SectionAttr 0x8eed47878 <line:11:34, col:46> section "license"
+  `-UsedAttr 0x8eed478e8 <col:49>

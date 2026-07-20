@@ -1,0 +1,15 @@
+TranslationUnitDecl 0x8d2c75008 <<invalid sloc>> <invalid sloc>
+|-TypedefDecl 0x8d2c758c8 <<invalid sloc>> <invalid sloc> implicit __int128_t '__int128'
+| `-BuiltinType 0x8d2c755d0 '__int128'
+|-TypedefDecl 0x8d2c75938 <<invalid sloc>> <invalid sloc> implicit __uint128_t 'unsigned __int128'
+| `-BuiltinType 0x8d2c755f0 'unsigned __int128'
+|-TypedefDecl 0x8d2c75c48 <<invalid sloc>> <invalid sloc> implicit __NSConstantString 'struct __NSConstantString_tag'
+| `-RecordType 0x8d2c75c10 'struct __NSConstantString_tag' canonical
+|   `-Record 0x8d2c75990 '__NSConstantString_tag'
+|-TypedefDecl 0x8d2c75858 <<invalid sloc>> <invalid sloc> implicit __builtin_va_list 'void *'
+| `-PointerType 0x8d2c757b0 'void *'
+|   `-BuiltinType 0x8d2c75070 'void'
+`-FunctionDecl 0x8d2c75cf8 <ex/0.c:1:1, line:3:1> line:1:5 foo 'int ()'
+  `-CompoundStmt 0x8d2c75e18 <col:11, line:3:1>
+    `-ReturnStmt 0x8d2c75e08 <line:2:3, col:10>
+      `-IntegerLiteral 0x8d2c75de8 <col:10> 'int' 0

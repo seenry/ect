@@ -1,0 +1,108 @@
+TranslationUnitDecl 0xb5ac51008 <<invalid sloc>> <invalid sloc>
+|-TypedefDecl 0xb5ac518c8 <<invalid sloc>> <invalid sloc> implicit __int128_t '__int128'
+| `-BuiltinType 0xb5ac515d0 '__int128'
+|-TypedefDecl 0xb5ac51938 <<invalid sloc>> <invalid sloc> implicit __uint128_t 'unsigned __int128'
+| `-BuiltinType 0xb5ac515f0 'unsigned __int128'
+|-TypedefDecl 0xb5ac51c48 <<invalid sloc>> <invalid sloc> implicit __NSConstantString 'struct __NSConstantString_tag'
+| `-RecordType 0xb5ac51c10 'struct __NSConstantString_tag' canonical
+|   `-Record 0xb5ac51990 '__NSConstantString_tag'
+|-TypedefDecl 0xb5ac51858 <<invalid sloc>> <invalid sloc> implicit __builtin_va_list 'void *'
+| `-PointerType 0xb5ac517b0 'void *'
+|   `-BuiltinType 0xb5ac51070 'void'
+|-TypedefDecl 0xb5ac51cb8 </Users/scr8455/llvm-project/build/install/lib/clang/22/include/stdint.h:100:1, col:24> col:24 referenced int64_t 'long'
+| `-BuiltinType 0xb5ac51130 'long'
+|-TypedefDecl 0xb5ac51d28 <line:102:1, col:25> col:25 referenced uint64_t 'unsigned long'
+| `-BuiltinType 0xb5ac511d0 'unsigned long'
+|-TypedefDecl 0xb5ac51db8 <line:122:1, col:25> col:25 int_least64_t 'int64_t':'long'
+| `-TypedefType 0xb5ac51d80 'int64_t' sugar
+|   |-Typedef 0xb5ac51cb8 'int64_t'
+|   `-BuiltinType 0xb5ac51130 'long'
+|-TypedefDecl 0xb5ac51e48 <line:123:1, col:26> col:26 uint_least64_t 'uint64_t':'unsigned long'
+| `-TypedefType 0xb5ac51e10 'uint64_t' sugar
+|   |-Typedef 0xb5ac51d28 'uint64_t'
+|   `-BuiltinType 0xb5ac511d0 'unsigned long'
+|-TypedefDecl 0xb5ac51eb8 <line:124:1, col:25> col:25 int_fast64_t 'int64_t':'long'
+| `-TypedefType 0xb5ac51d80 'int64_t' sugar
+|   |-Typedef 0xb5ac51cb8 'int64_t'
+|   `-BuiltinType 0xb5ac51130 'long'
+|-TypedefDecl 0xb5ac51f28 <line:125:1, col:26> col:26 uint_fast64_t 'uint64_t':'unsigned long'
+| `-TypedefType 0xb5ac51e10 'uint64_t' sugar
+|   |-Typedef 0xb5ac51d28 'uint64_t'
+|   `-BuiltinType 0xb5ac511d0 'unsigned long'
+|-TypedefDecl 0xb5ac51f98 <line:197:1, col:24> col:24 referenced int32_t 'int'
+| `-BuiltinType 0xb5ac51110 'int'
+|-TypedefDecl 0xb5ad21018 <line:202:1, col:25> col:25 referenced uint32_t 'unsigned int'
+| `-BuiltinType 0xb5ac511b0 'unsigned int'
+|-TypedefDecl 0xb5ad210a8 <line:220:1, col:25> col:25 int_least32_t 'int32_t':'int'
+| `-TypedefType 0xb5ad21070 'int32_t' sugar
+|   |-Typedef 0xb5ac51f98 'int32_t'
+|   `-BuiltinType 0xb5ac51110 'int'
+|-TypedefDecl 0xb5ad21138 <line:221:1, col:26> col:26 uint_least32_t 'uint32_t':'unsigned int'
+| `-TypedefType 0xb5ad21100 'uint32_t' sugar
+|   |-Typedef 0xb5ad21018 'uint32_t'
+|   `-BuiltinType 0xb5ac511b0 'unsigned int'
+|-TypedefDecl 0xb5ad211a8 <line:222:1, col:25> col:25 int_fast32_t 'int32_t':'int'
+| `-TypedefType 0xb5ad21070 'int32_t' sugar
+|   |-Typedef 0xb5ac51f98 'int32_t'
+|   `-BuiltinType 0xb5ac51110 'int'
+|-TypedefDecl 0xb5ad21218 <line:223:1, col:26> col:26 uint_fast32_t 'uint32_t':'unsigned int'
+| `-TypedefType 0xb5ad21100 'uint32_t' sugar
+|   |-Typedef 0xb5ad21018 'uint32_t'
+|   `-BuiltinType 0xb5ac511b0 'unsigned int'
+|-TypedefDecl 0xb5ad21288 <line:245:1, col:24> col:24 referenced int16_t 'short'
+| `-BuiltinType 0xb5ac510f0 'short'
+|-TypedefDecl 0xb5ad212f8 <line:247:1, col:25> col:25 referenced uint16_t 'unsigned short'
+| `-BuiltinType 0xb5ac51190 'unsigned short'
+|-TypedefDecl 0xb5ad21388 <line:259:1, col:25> col:25 int_least16_t 'int16_t':'short'
+| `-TypedefType 0xb5ad21350 'int16_t' sugar
+|   |-Typedef 0xb5ad21288 'int16_t'
+|   `-BuiltinType 0xb5ac510f0 'short'
+|-TypedefDecl 0xb5ad21418 <line:260:1, col:26> col:26 uint_least16_t 'uint16_t':'unsigned short'
+| `-TypedefType 0xb5ad213e0 'uint16_t' sugar
+|   |-Typedef 0xb5ad212f8 'uint16_t'
+|   `-BuiltinType 0xb5ac51190 'unsigned short'
+|-TypedefDecl 0xb5ad21488 <line:261:1, col:25> col:25 int_fast16_t 'int16_t':'short'
+| `-TypedefType 0xb5ad21350 'int16_t' sugar
+|   |-Typedef 0xb5ad21288 'int16_t'
+|   `-BuiltinType 0xb5ac510f0 'short'
+|-TypedefDecl 0xb5ad214f8 <line:262:1, col:26> col:26 uint_fast16_t 'uint16_t':'unsigned short'
+| `-TypedefType 0xb5ad213e0 'uint16_t' sugar
+|   |-Typedef 0xb5ad212f8 'uint16_t'
+|   `-BuiltinType 0xb5ac51190 'unsigned short'
+|-TypedefDecl 0xb5ad21568 <line:268:1, col:23> col:23 referenced int8_t 'signed char'
+| `-BuiltinType 0xb5ac510d0 'signed char'
+|-TypedefDecl 0xb5ad215d8 <line:270:1, col:24> col:24 referenced uint8_t 'unsigned char'
+| `-BuiltinType 0xb5ac51170 'unsigned char'
+|-TypedefDecl 0xb5ad21668 <line:278:1, col:24> col:24 int_least8_t 'int8_t':'signed char'
+| `-TypedefType 0xb5ad21630 'int8_t' sugar
+|   |-Typedef 0xb5ad21568 'int8_t'
+|   `-BuiltinType 0xb5ac510d0 'signed char'
+|-TypedefDecl 0xb5ad216f8 <line:279:1, col:25> col:25 uint_least8_t 'uint8_t':'unsigned char'
+| `-TypedefType 0xb5ad216c0 'uint8_t' sugar
+|   |-Typedef 0xb5ad215d8 'uint8_t'
+|   `-BuiltinType 0xb5ac51170 'unsigned char'
+|-TypedefDecl 0xb5ad21768 <line:280:1, col:24> col:24 int_fast8_t 'int8_t':'signed char'
+| `-TypedefType 0xb5ad21630 'int8_t' sugar
+|   |-Typedef 0xb5ad21568 'int8_t'
+|   `-BuiltinType 0xb5ac510d0 'signed char'
+|-TypedefDecl 0xb5ad217d8 <line:281:1, col:25> col:25 uint_fast8_t 'uint8_t':'unsigned char'
+| `-TypedefType 0xb5ad216c0 'uint8_t' sugar
+|   |-Typedef 0xb5ad215d8 'uint8_t'
+|   `-BuiltinType 0xb5ac51170 'unsigned char'
+|-TypedefDecl 0xb5ad21848 <line:295:1, col:25> col:25 intptr_t 'long'
+| `-BuiltinType 0xb5ac51130 'long'
+|-TypedefDecl 0xb5ad218b8 <line:302:1, col:26> col:26 uintptr_t 'unsigned long'
+| `-BuiltinType 0xb5ac511d0 'unsigned long'
+|-TypedefDecl 0xb5ad21928 <line:308:1, col:26> col:26 intmax_t 'long'
+| `-BuiltinType 0xb5ac51130 'long'
+|-TypedefDecl 0xb5ad21998 <line:309:1, col:26> col:26 uintmax_t 'unsigned long'
+| `-BuiltinType 0xb5ac511d0 'unsigned long'
+`-FunctionDecl 0xb5ad21ba0 <ex/b.c:3:1, line:5:1> line:3:6 B 'void (uint16_t *)'
+  |-ParmVarDecl 0xb5ad21a90 <col:8, col:18> col:18 used x 'uint16_t *'
+  `-CompoundStmt 0xb5ad21d40 <col:21, line:5:1>
+    `-BinaryOperator 0xb5ad21d20 <line:4:5, col:10> 'uint16_t':'unsigned short' '='
+      |-UnaryOperator 0xb5ad21cd0 <col:5, col:6> 'uint16_t':'unsigned short' lvalue prefix '*' cannot overflow
+      | `-ImplicitCastExpr 0xb5ad21cb8 <col:6> 'uint16_t *' <LValueToRValue>
+      |   `-DeclRefExpr 0xb5ad21c98 <col:6> 'uint16_t *' lvalue ParmVar 0xb5ad21a90 'x' 'uint16_t *'
+      `-ImplicitCastExpr 0xb5ad21d08 <col:10> 'uint16_t':'unsigned short' <IntegralCast>
+        `-IntegerLiteral 0xb5ad21ce8 <col:10> 'int' 1
