@@ -5,6 +5,8 @@
 #
 # (`llc -march=bpf` was the old spelling and newer LLVM rejects it; the rules
 # below use `-mtriple=bpf`.)
+.DELETE_ON_ERROR:
+
 CLANG ?= clang
 LLC   ?= llc
 
@@ -19,7 +21,7 @@ INC := -I./ex
 # translations into the Caracara IR, checked with
 #
 #     <ir>/_build/default/extracted_code/EqCheck.exe --net O0.ir O2.ir
-REF := ex/ex0.c
+REF := ex/basic/ex0.c
 
 all: $(EXO) $(EXA) bpf_dump bpf_to_ir O0.ir O2.ir
 
@@ -30,12 +32,14 @@ bpf_to_ir: src/bpf_to_ir.c include/elf.h include/bpf.h
 	gcc -o $@ src/bpf_to_ir.c -Iinclude -Wall -Wextra
 
 O0.o: $(REF)
-	$(CLANG) -target bpf -O0 $(INC) -emit-llvm -c $< -o - | \
-	  $(LLC) -mtriple=bpf -mcpu=probe -filetype=obj -o $@
+	$(CLANG) -target bpf -O0 $(INC) -emit-llvm -c $< -o $@.bc
+	$(LLC) -mtriple=bpf -mcpu=probe -filetype=obj -o $@ $@.bc
+	@rm -f $@.bc
 
 O2.o: $(REF)
-	$(CLANG) -target bpf -O2 $(INC) -emit-llvm -c $< -o - | \
-	  $(LLC) -mtriple=bpf -mcpu=probe -filetype=obj -o $@
+	$(CLANG) -target bpf -O2 $(INC) -emit-llvm -c $< -o $@.bc
+	$(LLC) -mtriple=bpf -mcpu=probe -filetype=obj -o $@ $@.bc
+	@rm -f $@.bc
 
 %.dump: %.o bpf_dump
 	./bpf_dump $< > $@
@@ -43,9 +47,11 @@ O2.o: $(REF)
 %.ir: %.o bpf_to_ir
 	./bpf_to_ir $< > $@
 
+# -g to get kv sizes of `struct { __uint(...); } SEC(".maps")`
 %.o: %.c
-	$(CLANG) -target bpf -O2 $(INC) -emit-llvm -c $< -o - | \
-	  $(LLC) -mtriple=bpf -mcpu=probe -filetype=obj -o $@
+	$(CLANG) -target bpf -O2 -g $(INC) -emit-llvm -c $< -o $@.bc
+	$(LLC) -mtriple=bpf -mcpu=probe -filetype=obj -o $@ $@.bc
+	@rm -f $@.bc
 
 %.ast: %.c
 	$(CLANG) -target bpf $(INC) -Wall -O2 -Xclang -ast-dump -c $< > $@
@@ -53,4 +59,4 @@ O2.o: $(REF)
 .PHONY: clean
 
 clean:
-	rm -rf ex/*.o ex/*.ast bpf_dump bpf_to_ir
+	rm -rf ex/*/*.o ex/*/*.ast bpf_dump bpf_to_ir

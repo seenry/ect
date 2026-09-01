@@ -9,7 +9,7 @@ const char *get_class_name(uint8_t code) {
         case BPF_STX: return "STX";
         case BPF_ALU: return "ALU";
         case BPF_JMP: return "JMP";
-        case BPF_RET: return "RET";
+        case BPF_JMP32: return "JMP32";
         case BPF_ALU64: return "ALU64";
         default: return "UNKNOWN";
     }
@@ -82,8 +82,10 @@ int dump_bpf_insn(struct bpf_insn *insn, size_t idx) {
         } else {
             printf(" r%d, 0x%x", insn->dst_reg, insn->imm);
         }
-    } else if (cls == BPF_JMP) {
-        printf("JMP_%s", get_jmp_op_name(insn->code));
+    } else if (cls == BPF_JMP || cls == BPF_JMP32) {
+        /* Same operand shape; JMP32 just compares the low 32 bits. */
+        printf("%s_%s", cls == BPF_JMP32 ? "JMP32" : "JMP",
+               get_jmp_op_name(insn->code));
         if (BPF_OP(insn->code) == BPF_CALL) {
             printf(" %d", insn->imm);
         } else if (BPF_OP(insn->code) == BPF_EXIT) {

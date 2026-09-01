@@ -2,6 +2,7 @@
 #define _BPF_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 // BPF instruction structure
 struct bpf_insn {
@@ -20,7 +21,9 @@ struct bpf_insn {
 #define BPF_STX     0x03
 #define BPF_ALU     0x04
 #define BPF_JMP     0x05
-#define BPF_RET     0x06
+// 0x06 was BPF_RET in classic BPF; eBPF reassigned it to the 32-bit compare
+// class, whose operands are the low halves of the two registers.
+#define BPF_JMP32   0x06
 #define BPF_ALU64   0x07
 
 // BPF size modifiers

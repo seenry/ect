@@ -1,0 +1,306 @@
+TranslationUnitDecl 0x95f075008 <<invalid sloc>> <invalid sloc>
+|-TypedefDecl 0x95f0758c8 <<invalid sloc>> <invalid sloc> implicit __int128_t '__int128'
+| `-BuiltinType 0x95f0755d0 '__int128'
+|-TypedefDecl 0x95f075938 <<invalid sloc>> <invalid sloc> implicit __uint128_t 'unsigned __int128'
+| `-BuiltinType 0x95f0755f0 'unsigned __int128'
+|-TypedefDecl 0x95f075c48 <<invalid sloc>> <invalid sloc> implicit __NSConstantString 'struct __NSConstantString_tag'
+| `-RecordType 0x95f075c10 'struct __NSConstantString_tag' canonical
+|   `-Record 0x95f075990 '__NSConstantString_tag'
+|-TypedefDecl 0x95f075858 <<invalid sloc>> <invalid sloc> implicit __builtin_va_list 'void *'
+| `-PointerType 0x95f0757b0 'void *'
+|   `-BuiltinType 0x95f075070 'void'
+|-TypedefDecl 0x95f075cb8 <ex/suricata/sur_common.h:11:1, col:24> col:24 referenced __u8 'unsigned char'
+| `-BuiltinType 0x95f075170 'unsigned char'
+|-TypedefDecl 0x95f075d28 <line:12:1, col:24> col:24 referenced __u16 'unsigned short'
+| `-BuiltinType 0x95f075190 'unsigned short'
+|-TypedefDecl 0x95f075d98 <line:13:1, col:24> col:24 referenced __u32 'unsigned int'
+| `-BuiltinType 0x95f0751b0 'unsigned int'
+|-TypedefDecl 0x95f075e08 <line:14:1, col:28> col:28 __u64 'unsigned long long'
+| `-BuiltinType 0x95f0751f0 'unsigned long long'
+|-RecordDecl 0x95f075e60 <line:28:1, line:33:1> line:28:8 struct __sk_buff definition
+| |-FieldDecl 0x95f075f18 <line:29:5, col:11> col:11 len '__u32':'unsigned int'
+| |-FieldDecl 0x95f075f80 <col:5, col:16> col:16 pkt_type '__u32':'unsigned int'
+| |-FieldDecl 0x95f12d000 <col:5, col:26> col:26 mark '__u32':'unsigned int'
+| |-FieldDecl 0x95f12d068 <col:5, col:32> col:32 queue_mapping '__u32':'unsigned int'
+| |-FieldDecl 0x95f12d0d0 <col:5, col:47> col:47 protocol '__u32':'unsigned int'
+| |-FieldDecl 0x95f12d138 <col:5, col:57> col:57 vlan_present '__u32':'unsigned int'
+| |-FieldDecl 0x95f12d1a0 <line:30:5, col:11> col:11 vlan_tci '__u32':'unsigned int'
+| |-FieldDecl 0x95f12d208 <col:5, col:21> col:21 vlan_proto '__u32':'unsigned int'
+| |-FieldDecl 0x95f12d270 <col:5, col:33> col:33 priority '__u32':'unsigned int'
+| |-FieldDecl 0x95f12d2d8 <col:5, col:43> col:43 ingress_ifindex '__u32':'unsigned int'
+| |-FieldDecl 0x95f12d340 <col:5, col:60> col:60 ifindex '__u32':'unsigned int'
+| |-FieldDecl 0x95f12d3a8 <col:5, col:69> col:69 tc_index '__u32':'unsigned int'
+| |-FieldDecl 0x95f12d4e8 <line:31:5, col:15> col:11 referenced cb '__u32[5]'
+| |-FieldDecl 0x95f12d550 <line:32:5, col:11> col:11 hash '__u32':'unsigned int'
+| |-FieldDecl 0x95f12d5b8 <col:5, col:17> col:17 tc_classid '__u32':'unsigned int'
+| |-FieldDecl 0x95f12d620 <col:5, col:29> col:29 data '__u32':'unsigned int'
+| |-FieldDecl 0x95f12d688 <col:5, col:35> col:35 data_end '__u32':'unsigned int'
+| `-FieldDecl 0x95f12d6f0 <col:5, col:45> col:45 napi_id '__u32':'unsigned int'
+|-RecordDecl 0x95f12d740 <line:34:1, col:61> col:8 struct ethhdr definition
+| |-FieldDecl 0x95f12d8a8 <col:17, col:30> col:22 h_dest '__u8[6]'
+| |-FieldDecl 0x95f12d960 <col:17, col:43> col:33 h_source '__u8[6]'
+| `-FieldDecl 0x95f12d9e8 <col:46, col:52> col:52 h_proto '__u16':'unsigned short'
+|-RecordDecl 0x95f12da38 <line:35:1, line:38:1> line:35:8 struct iphdr definition
+| |-FieldDecl 0x95f12dad0 <line:36:5, col:10> col:10 vihl '__u8':'unsigned char'
+| |-FieldDecl 0x95f12db38 <col:5, col:16> col:16 tos '__u8':'unsigned char'
+| |-FieldDecl 0x95f12dba0 <col:21, col:27> col:27 tot_len '__u16':'unsigned short'
+| |-FieldDecl 0x95f12dc08 <col:21, col:36> col:36 id '__u16':'unsigned short'
+| |-FieldDecl 0x95f12dc70 <col:21, col:40> col:40 frag_off '__u16':'unsigned short'
+| |-FieldDecl 0x95f12dcd8 <col:50, col:55> col:55 ttl '__u8':'unsigned char'
+| |-FieldDecl 0x95f12dd40 <col:50, col:60> col:60 protocol '__u8':'unsigned char'
+| |-FieldDecl 0x95f12dda8 <line:37:5, col:11> col:11 check '__u16':'unsigned short'
+| |-FieldDecl 0x95f12de10 <col:18, col:24> col:24 saddr '__u32':'unsigned int'
+| `-FieldDecl 0x95f12de78 <col:31, col:37> col:37 daddr '__u32':'unsigned int'
+|-FunctionDecl 0x95f12f0a8 <line:40:1, col:89> col:20 used load_word 'unsigned long long (void *, unsigned long long)'
+| |-ParmVarDecl 0x95f12dee0 <col:30, col:36> col:36 skb 'void *'
+| |-ParmVarDecl 0x95f12df60 <col:41, col:60> col:60 off 'unsigned long long'
+| `-AsmLabelAttr 0x95f12f150 <col:69> "llvm.bpf.load.word"
+|-FunctionDecl 0x95f12f390 <line:41:1, col:89> col:20 used load_half 'unsigned long long (void *, unsigned long long)'
+| |-ParmVarDecl 0x95f12f240 <col:30, col:36> col:36 skb 'void *'
+| |-ParmVarDecl 0x95f12f2c0 <col:41, col:60> col:60 off 'unsigned long long'
+| `-AsmLabelAttr 0x95f12f438 <col:69> "llvm.bpf.load.half"
+|-FunctionDecl 0x95f12f630 <line:42:1, col:89> col:20 load_byte 'unsigned long long (void *, unsigned long long)'
+| |-ParmVarDecl 0x95f12f4e0 <col:30, col:36> col:36 skb 'void *'
+| |-ParmVarDecl 0x95f12f560 <col:41, col:60> col:60 off 'unsigned long long'
+| `-AsmLabelAttr 0x95f12f6d8 <col:69> "llvm.bpf.load.byte"
+|-VarDecl 0x95f12f9b8 <line:43:1, col:76> col:16 used bpf_map_lookup_elem 'void *(*)(void *, const void *)' static cinit
+| `-ImplicitCastExpr 0x95f12fa80 <col:67, col:76> 'void *(*)(void *, const void *)' <BitCast>
+|   `-CStyleCastExpr 0x95f12fa58 <col:67, col:76> 'void *' <IntegralToPointer>
+|     `-IntegerLiteral 0x95f12fa20 <col:76> 'int' 1
+|-RecordDecl 0x95f12fae0 <line:46:1, col:36> col:8 struct in6_addr_shim definition
+| `-FieldDecl 0x95f12fc28 <col:24, col:33> col:30 w '__u32[4]'
+|-RecordDecl 0x95f12fc78 <line:47:1, line:51:1> line:47:8 struct ipv6hdr definition
+| |-FieldDecl 0x95f12fd10 <line:48:5, col:10> col:10 prio_ver '__u8':'unsigned char'
+| |-FieldDecl 0x95f12fe28 <col:20, col:29> col:25 fl '__u8[3]'
+| |-FieldDecl 0x95f12fe90 <col:32, col:38> col:38 payload_len '__u16':'unsigned short'
+| |-FieldDecl 0x95f12fef8 <col:51, col:56> col:56 nexthdr '__u8':'unsigned char'
+| |-FieldDecl 0x95f12ff60 <col:51, col:65> col:65 hop_limit '__u8':'unsigned char'
+| |-FieldDecl 0x95f131018 <line:49:5, col:26> col:26 saddr 'struct in6_addr_shim'
+| `-FieldDecl 0x95f131080 <line:50:5, col:26> col:26 daddr 'struct in6_addr_shim'
+|-RecordDecl 0x95f1310d0 <ex/suricata/filter.c:17:1, line:22:1> line:17:1 struct definition
+| |-FieldDecl 0x95f131288 <ex/suricata/sur_common.h:16:27, col:42> ex/suricata/filter.c:18:12 type 'int (*)[6]'
+| |-FieldDecl 0x95f1313c8 <ex/suricata/sur_common.h:17:27, ex/suricata/filter.c:19:12> col:12 key 'typeof(__u32) *'
+| |-FieldDecl 0x95f1314d8 <ex/suricata/sur_common.h:17:27, ex/suricata/filter.c:20:12> col:12 value 'typeof(__u32) *'
+| `-FieldDecl 0x95f131668 <ex/suricata/sur_common.h:16:27, col:42> ex/suricata/filter.c:21:12 max_entries 'int (*)[32768]'
+|-VarDecl 0x95f131748 <line:17:1, line:22:3> col:3 used ipv4_drop 'struct (unnamed struct at ex/suricata/filter.c:17:1)'
+| |-SectionAttr 0x95f1317b0 <ex/suricata/sur_common.h:15:31, col:40> section ".maps"
+| `-UsedAttr 0x95f131820 <col:43>
+|-RecordDecl 0x95f131860 <ex/suricata/filter.c:24:1, line:27:1> line:24:8 struct vlan_hdr definition
+| |-FieldDecl 0x95f1318f8 <line:25:5, col:13> col:13 h_vlan_TCI '__u16':'unsigned short'
+| `-FieldDecl 0x95f131960 <line:26:5, col:13> col:13 h_vlan_encapsulated_proto '__u16':'unsigned short'
+|-FunctionDecl 0x95f131b88 <line:29:1, line:64:1> line:29:28 used ipv4_filter 'int (struct __sk_buff *)' static inline
+| |-ParmVarDecl 0x95f131a70 <col:40, col:58> col:58 used skb 'struct __sk_buff *'
+| |-CompoundStmt 0x95f133c58 <line:30:1, line:64:1>
+| | |-DeclStmt 0x95f131d28 <line:31:5, col:16>
+| | | `-VarDecl 0x95f131cc0 <col:5, col:11> col:11 used nhoff '__u32':'unsigned int'
+| | |-DeclStmt 0x95f131e18 <line:32:5, col:17>
+| | | `-VarDecl 0x95f131db0 <col:5, col:12> col:12 used value '__u32 *'
+| | |-DeclStmt 0x95f131f00 <line:33:5, col:17>
+| | | `-VarDecl 0x95f131e60 <col:5, col:16> col:11 used ip '__u32':'unsigned int' cinit
+| | |   `-ImplicitCastExpr 0x95f131ee8 <col:16> '__u32':'unsigned int' <IntegralCast>
+| | |     `-IntegerLiteral 0x95f131ec8 <col:16> 'int' 0
+| | |-BinaryOperator 0x95f133018 <line:35:5, col:22> '__u32':'unsigned int' '='
+| | | |-DeclRefExpr 0x95f131f18 <col:5> '__u32':'unsigned int' lvalue Var 0x95f131cc0 'nhoff' '__u32':'unsigned int'
+| | | `-ImplicitCastExpr 0x95f133000 <col:13, col:22> '__u32':'unsigned int' <LValueToRValue>
+| | |   `-ArraySubscriptExpr 0x95f131fd8 <col:13, col:22> '__u32':'unsigned int' lvalue
+| | |     |-ImplicitCastExpr 0x95f131fc0 <col:13, col:18> '__u32 *' <ArrayToPointerDecay>
+| | |     | `-MemberExpr 0x95f131f70 <col:13, col:18> '__u32[5]' lvalue ->cb 0x95f12d4e8
+| | |     |   `-ImplicitCastExpr 0x95f131f58 <col:13> 'struct __sk_buff *' <LValueToRValue>
+| | |     |     `-DeclRefExpr 0x95f131f38 <col:13> 'struct __sk_buff *' lvalue ParmVar 0x95f131a70 'skb' 'struct __sk_buff *'
+| | |     `-IntegerLiteral 0x95f131fa0 <col:21> 'int' 0
+| | |-BinaryOperator 0x95f133280 <line:37:5, col:62> '__u32':'unsigned int' '='
+| | | |-DeclRefExpr 0x95f133038 <col:5> '__u32':'unsigned int' lvalue Var 0x95f131e60 'ip' '__u32':'unsigned int'
+| | | `-ImplicitCastExpr 0x95f133268 <col:10, col:62> '__u32':'unsigned int' <IntegralCast>
+| | |   `-CallExpr 0x95f1331e8 <col:10, col:62> 'unsigned long long'
+| | |     |-ImplicitCastExpr 0x95f1331d0 <col:10> 'unsigned long long (*)(void *, unsigned long long)' <FunctionToPointerDecay>
+| | |     | `-DeclRefExpr 0x95f133058 <col:10> 'unsigned long long (void *, unsigned long long)' Function 0x95f12f0a8 'load_word' 'unsigned long long (void *, unsigned long long)'
+| | |     |-ImplicitCastExpr 0x95f133238 <col:20> 'void *' <BitCast>
+| | |     | `-ImplicitCastExpr 0x95f133220 <col:20> 'struct __sk_buff *' <LValueToRValue>
+| | |     |   `-DeclRefExpr 0x95f133078 <col:20> 'struct __sk_buff *' lvalue ParmVar 0x95f131a70 'skb' 'struct __sk_buff *'
+| | |     `-ImplicitCastExpr 0x95f133250 <col:25, ex/suricata/sur_common.h:19:47> 'unsigned long long' <IntegralCast>
+| | |       `-BinaryOperator 0x95f133180 <ex/suricata/filter.c:37:25, ex/suricata/sur_common.h:19:47> '__size_t':'unsigned long' '+'
+| | |         |-ImplicitCastExpr 0x95f133168 <ex/suricata/filter.c:37:25> '__size_t':'unsigned long' <IntegralCast>
+| | |         | `-ImplicitCastExpr 0x95f133150 <col:25> '__u32':'unsigned int' <LValueToRValue>
+| | |         |   `-DeclRefExpr 0x95f133098 <col:25> '__u32':'unsigned int' lvalue Var 0x95f131cc0 'nhoff' '__u32':'unsigned int'
+| | |         `-OffsetOfExpr 0x95f133118 <ex/suricata/sur_common.h:19:24, col:47> '__size_t':'unsigned long'
+| | |-BinaryOperator 0x95f1334e8 <ex/suricata/filter.c:38:5, col:48> '__u32 *' '='
+| | | |-DeclRefExpr 0x95f133340 <col:5> '__u32 *' lvalue Var 0x95f131db0 'value' '__u32 *'
+| | | `-ImplicitCastExpr 0x95f1334d0 <col:13, col:48> '__u32 *' <BitCast>
+| | |   `-CallExpr 0x95f133468 <col:13, col:48> 'void *'
+| | |     |-ImplicitCastExpr 0x95f133450 <col:13> 'void *(*)(void *, const void *)' <LValueToRValue>
+| | |     | `-DeclRefExpr 0x95f133360 <col:13> 'void *(*)(void *, const void *)' lvalue Var 0x95f12f9b8 'bpf_map_lookup_elem' 'void *(*)(void *, const void *)'
+| | |     |-ImplicitCastExpr 0x95f1334a0 <col:33, col:34> 'void *' <BitCast>
+| | |     | `-UnaryOperator 0x95f133400 <col:33, col:34> 'struct (unnamed struct at ex/suricata/filter.c:17:1) *' prefix '&' cannot overflow
+| | |     |   `-DeclRefExpr 0x95f133380 <col:34> 'struct (unnamed struct at ex/suricata/filter.c:17:1)' lvalue Var 0x95f131748 'ipv4_drop' 'struct (unnamed struct at ex/suricata/filter.c:17:1)'
+| | |     `-ImplicitCastExpr 0x95f1334b8 <col:45, col:46> 'const void *' <BitCast>
+| | |       `-UnaryOperator 0x95f133438 <col:45, col:46> '__u32 *' prefix '&' cannot overflow
+| | |         `-DeclRefExpr 0x95f133418 <col:46> '__u32':'unsigned int' lvalue Var 0x95f131e60 'ip' '__u32':'unsigned int'
+| | |-IfStmt 0x95f1336c0 <line:39:5, line:46:5>
+| | | |-ImplicitCastExpr 0x95f133528 <line:39:9> '__u32 *' <LValueToRValue>
+| | | | `-DeclRefExpr 0x95f133508 <col:9> '__u32 *' lvalue Var 0x95f131db0 'value' '__u32 *'
+| | | `-CompoundStmt 0x95f1336a0 <col:16, line:46:5>
+| | |   |-BinaryOperator 0x95f133650 <line:44:9, col:27> '__u32':'unsigned int' '='
+| | |   | |-UnaryOperator 0x95f133578 <col:9, col:10> '__u32':'unsigned int' lvalue prefix '*' cannot overflow
+| | |   | | `-ImplicitCastExpr 0x95f133560 <col:10> '__u32 *' <LValueToRValue>
+| | |   | |   `-DeclRefExpr 0x95f133540 <col:10> '__u32 *' lvalue Var 0x95f131db0 'value' '__u32 *'
+| | |   | `-BinaryOperator 0x95f133630 <col:18, col:27> '__u32':'unsigned int' '+'
+| | |   |   |-ImplicitCastExpr 0x95f133600 <col:18, col:19> '__u32':'unsigned int' <LValueToRValue>
+| | |   |   | `-UnaryOperator 0x95f1335c8 <col:18, col:19> '__u32':'unsigned int' lvalue prefix '*' cannot overflow
+| | |   |   |   `-ImplicitCastExpr 0x95f1335b0 <col:19> '__u32 *' <LValueToRValue>
+| | |   |   |     `-DeclRefExpr 0x95f133590 <col:19> '__u32 *' lvalue Var 0x95f131db0 'value' '__u32 *'
+| | |   |   `-ImplicitCastExpr 0x95f133618 <col:27> '__u32':'unsigned int' <IntegralCast>
+| | |   |     `-IntegerLiteral 0x95f1335e0 <col:27> 'int' 1
+| | |   `-ReturnStmt 0x95f133690 <line:45:9, col:16>
+| | |     `-IntegerLiteral 0x95f133670 <col:16> 'int' 0
+| | |-BinaryOperator 0x95f1338b0 <line:48:5, col:62> '__u32':'unsigned int' '='
+| | | |-DeclRefExpr 0x95f1336e0 <col:5> '__u32':'unsigned int' lvalue Var 0x95f131e60 'ip' '__u32':'unsigned int'
+| | | `-ImplicitCastExpr 0x95f133898 <col:10, col:62> '__u32':'unsigned int' <IntegralCast>
+| | |   `-CallExpr 0x95f133818 <col:10, col:62> 'unsigned long long'
+| | |     |-ImplicitCastExpr 0x95f133800 <col:10> 'unsigned long long (*)(void *, unsigned long long)' <FunctionToPointerDecay>
+| | |     | `-DeclRefExpr 0x95f133700 <col:10> 'unsigned long long (void *, unsigned long long)' Function 0x95f12f0a8 'load_word' 'unsigned long long (void *, unsigned long long)'
+| | |     |-ImplicitCastExpr 0x95f133868 <col:20> 'void *' <BitCast>
+| | |     | `-ImplicitCastExpr 0x95f133850 <col:20> 'struct __sk_buff *' <LValueToRValue>
+| | |     |   `-DeclRefExpr 0x95f133720 <col:20> 'struct __sk_buff *' lvalue ParmVar 0x95f131a70 'skb' 'struct __sk_buff *'
+| | |     `-ImplicitCastExpr 0x95f133880 <col:25, ex/suricata/sur_common.h:19:47> 'unsigned long long' <IntegralCast>
+| | |       `-BinaryOperator 0x95f1337e0 <ex/suricata/filter.c:48:25, ex/suricata/sur_common.h:19:47> '__size_t':'unsigned long' '+'
+| | |         |-ImplicitCastExpr 0x95f1337c8 <ex/suricata/filter.c:48:25> '__size_t':'unsigned long' <IntegralCast>
+| | |         | `-ImplicitCastExpr 0x95f1337b0 <col:25> '__u32':'unsigned int' <LValueToRValue>
+| | |         |   `-DeclRefExpr 0x95f133740 <col:25> '__u32':'unsigned int' lvalue Var 0x95f131cc0 'nhoff' '__u32':'unsigned int'
+| | |         `-OffsetOfExpr 0x95f133778 <ex/suricata/sur_common.h:19:24, col:47> '__size_t':'unsigned long'
+| | |-BinaryOperator 0x95f133a18 <ex/suricata/filter.c:49:5, col:48> '__u32 *' '='
+| | | |-DeclRefExpr 0x95f1338d0 <col:5> '__u32 *' lvalue Var 0x95f131db0 'value' '__u32 *'
+| | | `-ImplicitCastExpr 0x95f133a00 <col:13, col:48> '__u32 *' <BitCast>
+| | |   `-CallExpr 0x95f133998 <col:13, col:48> 'void *'
+| | |     |-ImplicitCastExpr 0x95f133980 <col:13> 'void *(*)(void *, const void *)' <LValueToRValue>
+| | |     | `-DeclRefExpr 0x95f1338f0 <col:13> 'void *(*)(void *, const void *)' lvalue Var 0x95f12f9b8 'bpf_map_lookup_elem' 'void *(*)(void *, const void *)'
+| | |     |-ImplicitCastExpr 0x95f1339d0 <col:33, col:34> 'void *' <BitCast>
+| | |     | `-UnaryOperator 0x95f133930 <col:33, col:34> 'struct (unnamed struct at ex/suricata/filter.c:17:1) *' prefix '&' cannot overflow
+| | |     |   `-DeclRefExpr 0x95f133910 <col:34> 'struct (unnamed struct at ex/suricata/filter.c:17:1)' lvalue Var 0x95f131748 'ipv4_drop' 'struct (unnamed struct at ex/suricata/filter.c:17:1)'
+| | |     `-ImplicitCastExpr 0x95f1339e8 <col:45, col:46> 'const void *' <BitCast>
+| | |       `-UnaryOperator 0x95f133968 <col:45, col:46> '__u32 *' prefix '&' cannot overflow
+| | |         `-DeclRefExpr 0x95f133948 <col:46> '__u32':'unsigned int' lvalue Var 0x95f131e60 'ip' '__u32':'unsigned int'
+| | |-IfStmt 0x95f133bf0 <line:50:5, line:57:5>
+| | | |-ImplicitCastExpr 0x95f133a58 <line:50:9> '__u32 *' <LValueToRValue>
+| | | | `-DeclRefExpr 0x95f133a38 <col:9> '__u32 *' lvalue Var 0x95f131db0 'value' '__u32 *'
+| | | `-CompoundStmt 0x95f133bd0 <col:16, line:57:5>
+| | |   |-BinaryOperator 0x95f133b80 <line:55:9, col:27> '__u32':'unsigned int' '='
+| | |   | |-UnaryOperator 0x95f133aa8 <col:9, col:10> '__u32':'unsigned int' lvalue prefix '*' cannot overflow
+| | |   | | `-ImplicitCastExpr 0x95f133a90 <col:10> '__u32 *' <LValueToRValue>
+| | |   | |   `-DeclRefExpr 0x95f133a70 <col:10> '__u32 *' lvalue Var 0x95f131db0 'value' '__u32 *'
+| | |   | `-BinaryOperator 0x95f133b60 <col:18, col:27> '__u32':'unsigned int' '+'
+| | |   |   |-ImplicitCastExpr 0x95f133b30 <col:18, col:19> '__u32':'unsigned int' <LValueToRValue>
+| | |   |   | `-UnaryOperator 0x95f133af8 <col:18, col:19> '__u32':'unsigned int' lvalue prefix '*' cannot overflow
+| | |   |   |   `-ImplicitCastExpr 0x95f133ae0 <col:19> '__u32 *' <LValueToRValue>
+| | |   |   |     `-DeclRefExpr 0x95f133ac0 <col:19> '__u32 *' lvalue Var 0x95f131db0 'value' '__u32 *'
+| | |   |   `-ImplicitCastExpr 0x95f133b48 <col:27> '__u32':'unsigned int' <IntegralCast>
+| | |   |     `-IntegerLiteral 0x95f133b10 <col:27> 'int' 1
+| | |   `-ReturnStmt 0x95f133bc0 <line:56:9, col:16>
+| | |     `-IntegerLiteral 0x95f133ba0 <col:16> 'int' 0
+| | `-ReturnStmt 0x95f133c48 <line:63:5, col:13>
+| |   `-UnaryOperator 0x95f133c30 <col:12, col:13> 'int' prefix '-'
+| |     `-IntegerLiteral 0x95f133c10 <col:13> 'int' 1
+| `-AlwaysInlineAttr 0x95f131c38 <ex/suricata/sur_common.h:18:47> always_inline
+|-FunctionDecl 0x95f133d78 <ex/suricata/filter.c:66:1, line:69:1> line:66:28 used ipv6_filter 'int (struct __sk_buff *)' static inline
+| |-ParmVarDecl 0x95f133ce0 <col:40, col:58> col:58 skb 'struct __sk_buff *'
+| |-CompoundStmt 0x95f133ec8 <line:67:1, line:69:1>
+| | `-ReturnStmt 0x95f133eb8 <line:68:5, col:13>
+| |   `-UnaryOperator 0x95f133ea0 <col:12, col:13> 'int' prefix '-'
+| |     `-IntegerLiteral 0x95f133e80 <col:13> 'int' 1
+| `-AlwaysInlineAttr 0x95f133e28 <ex/suricata/sur_common.h:18:47> always_inline
+|-FunctionDecl 0x95f135000 <ex/suricata/filter.c:71:1, line:93:1> line:71:19 used hashfilter 'int (struct __sk_buff *)'
+| |-ParmVarDecl 0x95f133f20 <col:30, col:48> col:48 used skb 'struct __sk_buff *'
+| |-CompoundStmt 0x95f135f08 <line:72:1, line:93:1>
+| | |-DeclStmt 0x95f135218 <line:73:5, col:27>
+| | | `-VarDecl 0x95f135178 <col:5, ex/suricata/sur_common.h:22:25> ex/suricata/filter.c:73:11 used nhoff '__u32':'unsigned int' cinit
+| | |   `-ImplicitCastExpr 0x95f135200 <ex/suricata/sur_common.h:22:25> '__u32':'unsigned int' <IntegralCast>
+| | |     `-IntegerLiteral 0x95f1351e0 <col:25> 'int' 14
+| | |-DeclStmt 0x95f1354b8 <ex/suricata/filter.c:75:5, col:67>
+| | | `-VarDecl 0x95f135260 <col:5, col:66> col:11 used proto '__u16':'unsigned short' cinit
+| | |   `-ImplicitCastExpr 0x95f135438 <col:19, col:66> '__u16':'unsigned short' <IntegralCast>
+| | |     `-CallExpr 0x95f1353b8 <col:19, col:66> 'unsigned long long'
+| | |       |-ImplicitCastExpr 0x95f1353a0 <col:19> 'unsigned long long (*)(void *, unsigned long long)' <FunctionToPointerDecay>
+| | |       | `-DeclRefExpr 0x95f1352c8 <col:19> 'unsigned long long (void *, unsigned long long)' Function 0x95f12f390 'load_half' 'unsigned long long (void *, unsigned long long)'
+| | |       |-ImplicitCastExpr 0x95f135408 <col:29> 'void *' <BitCast>
+| | |       | `-ImplicitCastExpr 0x95f1353f0 <col:29> 'struct __sk_buff *' <LValueToRValue>
+| | |       |   `-DeclRefExpr 0x95f1352e8 <col:29> 'struct __sk_buff *' lvalue ParmVar 0x95f133f20 'skb' 'struct __sk_buff *'
+| | |       `-ImplicitCastExpr 0x95f135420 <ex/suricata/sur_common.h:19:24, col:47> 'unsigned long long' <IntegralCast>
+| | |         `-OffsetOfExpr 0x95f135368 <col:24, col:47> '__size_t':'unsigned long'
+| | |-IfStmt 0x95f135948 <ex/suricata/filter.c:77:5, line:81:5>
+| | | |-BinaryOperator 0x95f1355f0 <line:77:9, ex/suricata/sur_common.h:25:25> 'int' '||'
+| | | | |-BinaryOperator 0x95f135540 <ex/suricata/filter.c:77:9, ex/suricata/sur_common.h:26:25> 'int' '=='
+| | | | | |-ImplicitCastExpr 0x95f135528 <ex/suricata/filter.c:77:9> 'int' <IntegralCast>
+| | | | | | `-ImplicitCastExpr 0x95f135510 <col:9> '__u16':'unsigned short' <LValueToRValue>
+| | | | | |   `-DeclRefExpr 0x95f1354d0 <col:9> '__u16':'unsigned short' lvalue Var 0x95f135260 'proto' '__u16':'unsigned short'
+| | | | | `-IntegerLiteral 0x95f1354f0 <ex/suricata/sur_common.h:26:25> 'int' 34984
+| | | | `-BinaryOperator 0x95f1355d0 <ex/suricata/filter.c:77:34, ex/suricata/sur_common.h:25:25> 'int' '=='
+| | | |   |-ImplicitCastExpr 0x95f1355b8 <ex/suricata/filter.c:77:34> 'int' <IntegralCast>
+| | | |   | `-ImplicitCastExpr 0x95f1355a0 <col:34> '__u16':'unsigned short' <LValueToRValue>
+| | | |   |   `-DeclRefExpr 0x95f135560 <col:34> '__u16':'unsigned short' lvalue Var 0x95f135260 'proto' '__u16':'unsigned short'
+| | | |   `-IntegerLiteral 0x95f135580 <ex/suricata/sur_common.h:25:25> 'int' 33024
+| | | `-CompoundStmt 0x95f135928 <ex/suricata/filter.c:77:56, line:81:5>
+| | |   |-BinaryOperator 0x95f135820 <line:78:9, line:79:53> '__u16':'unsigned short' '='
+| | |   | |-DeclRefExpr 0x95f135610 <line:78:9> '__u16':'unsigned short' lvalue Var 0x95f135260 'proto' '__u16':'unsigned short'
+| | |   | `-ImplicitCastExpr 0x95f135808 <col:17, line:79:53> '__u16':'unsigned short' <IntegralCast>
+| | |   |   `-CallExpr 0x95f135788 <line:78:17, line:79:53> 'unsigned long long'
+| | |   |     |-ImplicitCastExpr 0x95f135770 <line:78:17> 'unsigned long long (*)(void *, unsigned long long)' <FunctionToPointerDecay>
+| | |   |     | `-DeclRefExpr 0x95f135630 <col:17> 'unsigned long long (void *, unsigned long long)' Function 0x95f12f390 'load_half' 'unsigned long long (void *, unsigned long long)'
+| | |   |     |-ImplicitCastExpr 0x95f1357d8 <col:27> 'void *' <BitCast>
+| | |   |     | `-ImplicitCastExpr 0x95f1357c0 <col:27> 'struct __sk_buff *' <LValueToRValue>
+| | |   |     |   `-DeclRefExpr 0x95f135650 <col:27> 'struct __sk_buff *' lvalue ParmVar 0x95f133f20 'skb' 'struct __sk_buff *'
+| | |   |     `-ImplicitCastExpr 0x95f1357f0 <col:32, ex/suricata/sur_common.h:19:47> 'unsigned long long' <IntegralCast>
+| | |   |       `-BinaryOperator 0x95f135750 <ex/suricata/filter.c:78:32, ex/suricata/sur_common.h:19:47> '__size_t':'unsigned long' '+'
+| | |   |         |-ImplicitCastExpr 0x95f135738 <ex/suricata/filter.c:78:32> '__size_t':'unsigned long' <IntegralCast>
+| | |   |         | `-ImplicitCastExpr 0x95f135720 <col:32> '__u32':'unsigned int' <LValueToRValue>
+| | |   |         |   `-DeclRefExpr 0x95f135670 <col:32> '__u32':'unsigned int' lvalue Var 0x95f135178 'nhoff' '__u32':'unsigned int'
+| | |   |         `-OffsetOfExpr 0x95f1356e8 <ex/suricata/sur_common.h:19:24, col:47> '__size_t':'unsigned long'
+| | |   `-CompoundAssignOperator 0x95f1358f8 <ex/suricata/filter.c:80:9, col:40> '__u32':'unsigned int' '+=' ComputeLHSTy='__size_t':'unsigned long' ComputeResultTy='__size_t':'unsigned long'
+| | |     |-DeclRefExpr 0x95f1358a0 <col:9> '__u32':'unsigned int' lvalue Var 0x95f135178 'nhoff' '__u32':'unsigned int'
+| | |     `-UnaryExprOrTypeTraitExpr 0x95f1358d8 <col:18, col:40> '__size_t':'unsigned long' sizeof 'struct vlan_hdr'
+| | |-BinaryOperator 0x95f135a60 <line:83:5, col:18> '__u32':'unsigned int' '='
+| | | |-ArraySubscriptExpr 0x95f135a08 <col:5, col:14> '__u32':'unsigned int' lvalue
+| | | | |-ImplicitCastExpr 0x95f1359f0 <col:5, col:10> '__u32 *' <ArrayToPointerDecay>
+| | | | | `-MemberExpr 0x95f1359a0 <col:5, col:10> '__u32[5]' lvalue ->cb 0x95f12d4e8
+| | | | |   `-ImplicitCastExpr 0x95f135988 <col:5> 'struct __sk_buff *' <LValueToRValue>
+| | | | |     `-DeclRefExpr 0x95f135968 <col:5> 'struct __sk_buff *' lvalue ParmVar 0x95f133f20 'skb' 'struct __sk_buff *'
+| | | | `-IntegerLiteral 0x95f1359d0 <col:13> 'int' 0
+| | | `-ImplicitCastExpr 0x95f135a48 <col:18> '__u32':'unsigned int' <LValueToRValue>
+| | |   `-DeclRefExpr 0x95f135a28 <col:18> '__u32':'unsigned int' lvalue Var 0x95f135178 'nhoff' '__u32':'unsigned int'
+| | |-SwitchStmt 0x95f135ad0 <line:84:5, line:91:5>
+| | | |-ImplicitCastExpr 0x95f135ab8 <line:84:13> 'int' <IntegralCast>
+| | | | `-ImplicitCastExpr 0x95f135aa0 <col:13> '__u16':'unsigned short' <LValueToRValue>
+| | | |   `-DeclRefExpr 0x95f135a80 <col:13> '__u16':'unsigned short' lvalue Var 0x95f135260 'proto' '__u16':'unsigned short'
+| | | `-CompoundStmt 0x95f135e98 <col:20, line:91:5>
+| | |   |-CaseStmt 0x95f135b30 <line:85:9, line:86:35>
+| | |   | |-ConstantExpr 0x95f135b18 <ex/suricata/sur_common.h:23:25> 'int'
+| | |   | | `-IntegerLiteral 0x95f135af8 <col:25> 'int' 2048
+| | |   | `-ReturnStmt 0x95f135d40 <ex/suricata/filter.c:86:13, col:35>
+| | |   |   `-CallExpr 0x95f135c18 <col:20, col:35> 'int'
+| | |   |     |-ImplicitCastExpr 0x95f135c00 <col:20> 'int (*)(struct __sk_buff *)' <FunctionToPointerDecay>
+| | |   |     | `-DeclRefExpr 0x95f135b58 <col:20> 'int (struct __sk_buff *)' Function 0x95f131b88 'ipv4_filter' 'int (struct __sk_buff *)'
+| | |   |     `-ImplicitCastExpr 0x95f135c48 <col:32> 'struct __sk_buff *' <LValueToRValue>
+| | |   |       `-DeclRefExpr 0x95f135b78 <col:32> 'struct __sk_buff *' lvalue ParmVar 0x95f133f20 'skb' 'struct __sk_buff *'
+| | |   |-CaseStmt 0x95f135d88 <line:87:9, line:88:35>
+| | |   | |-ConstantExpr 0x95f135d70 <ex/suricata/sur_common.h:24:25> 'int'
+| | |   | | `-IntegerLiteral 0x95f135d50 <col:25> 'int' 34525
+| | |   | `-ReturnStmt 0x95f135e50 <ex/suricata/filter.c:88:13, col:35>
+| | |   |   `-CallExpr 0x95f135e08 <col:20, col:35> 'int'
+| | |   |     |-ImplicitCastExpr 0x95f135df0 <col:20> 'int (*)(struct __sk_buff *)' <FunctionToPointerDecay>
+| | |   |     | `-DeclRefExpr 0x95f135db0 <col:20> 'int (struct __sk_buff *)' Function 0x95f133d78 'ipv6_filter' 'int (struct __sk_buff *)'
+| | |   |     `-ImplicitCastExpr 0x95f135e38 <col:32> 'struct __sk_buff *' <LValueToRValue>
+| | |   |       `-DeclRefExpr 0x95f135dd0 <col:32> 'struct __sk_buff *' lvalue ParmVar 0x95f133f20 'skb' 'struct __sk_buff *'
+| | |   `-DefaultStmt 0x95f135e78 <line:89:9, line:90:13>
+| | |     `-BreakStmt 0x95f135e60 <col:13>
+| | `-ReturnStmt 0x95f135ef8 <line:92:5, col:13>
+| |   `-UnaryOperator 0x95f135ee0 <col:12, col:13> 'int' prefix '-'
+| |     `-IntegerLiteral 0x95f135ec0 <col:13> 'int' 1
+| |-SectionAttr 0x95f1350b0 <ex/suricata/sur_common.h:15:31, col:40> section "filter"
+| `-UsedAttr 0x95f135120 <col:43>
+|-VarDecl 0x95f134000 <ex/suricata/filter.c:95:1, col:35> col:6 used __license 'char[4]' cinit
+| |-StringLiteral 0x95f134130 <col:35> 'char[4]' "GPL"
+| |-SectionAttr 0x95f134068 <ex/suricata/sur_common.h:15:31, col:40> section "license"
+| `-UsedAttr 0x95f1340d8 <col:43>
+`-VarDecl 0x95f134188 <ex/suricata/filter.c:97:1, line:15:28> line:97:7 used __version '__u32':'unsigned int' cinit
+  |-ImplicitCastExpr 0x95f1342a8 <line:15:28> '__u32':'unsigned int' <IntegralCast>
+  | `-IntegerLiteral 0x95f134288 <col:28> 'int' 263682
+  |-SectionAttr 0x95f1341f0 <ex/suricata/sur_common.h:15:31, col:40> section "version"
+  `-UsedAttr 0x95f134260 <col:43>

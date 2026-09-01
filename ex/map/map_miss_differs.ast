@@ -1,0 +1,86 @@
+TranslationUnitDecl 0x70d071008 <<invalid sloc>> <invalid sloc>
+|-TypedefDecl 0x70d0718c8 <<invalid sloc>> <invalid sloc> implicit __int128_t '__int128'
+| `-BuiltinType 0x70d0715d0 '__int128'
+|-TypedefDecl 0x70d071938 <<invalid sloc>> <invalid sloc> implicit __uint128_t 'unsigned __int128'
+| `-BuiltinType 0x70d0715f0 'unsigned __int128'
+|-TypedefDecl 0x70d071c48 <<invalid sloc>> <invalid sloc> implicit __NSConstantString 'struct __NSConstantString_tag'
+| `-RecordType 0x70d071c10 'struct __NSConstantString_tag' canonical
+|   `-Record 0x70d071990 '__NSConstantString_tag'
+|-TypedefDecl 0x70d071858 <<invalid sloc>> <invalid sloc> implicit __builtin_va_list 'void *'
+| `-PointerType 0x70d0717b0 'void *'
+|   `-BuiltinType 0x70d071070 'void'
+|-TypedefDecl 0x70d071cb8 <ex/map/map_common.h:9:1, col:22> col:22 referenced __u32 'unsigned int'
+| `-BuiltinType 0x70d0711b0 'unsigned int'
+|-TypedefDecl 0x70d071d28 <line:10:1, col:28> col:28 referenced __u64 'unsigned long long'
+| `-BuiltinType 0x70d0711f0 'unsigned long long'
+|-RecordDecl 0x70d071d80 <line:14:1, line:16:1> line:14:8 struct bpf_map_def definition
+| |-FieldDecl 0x70d071e38 <line:15:5, col:11> col:11 type '__u32':'unsigned int'
+| |-FieldDecl 0x70d071ea0 <col:5, col:17> col:17 key_size '__u32':'unsigned int'
+| |-FieldDecl 0x70d071f08 <col:5, col:27> col:27 value_size '__u32':'unsigned int'
+| |-FieldDecl 0x70d071f70 <col:5, col:39> col:39 max_entries '__u32':'unsigned int'
+| `-FieldDecl 0x70d100000 <col:5, col:52> col:52 map_flags '__u32':'unsigned int'
+|-VarDecl 0x70d1000c8 <line:18:1, line:24:1> line:18:32 used counters 'struct bpf_map_def' cinit
+| |-InitListExpr 0x70d100570 <col:43, line:24:1> 'struct bpf_map_def'
+| | |-ImplicitCastExpr 0x70d1005d8 <line:19:13> '__u32':'unsigned int' <IntegralCast>
+| | | `-IntegerLiteral 0x70d100210 <col:13> 'int' 1
+| | |-ImplicitCastExpr 0x70d1005f0 <line:20:17, col:29> '__u32':'unsigned int' <IntegralCast>
+| | | `-UnaryExprOrTypeTraitExpr 0x70d1002a0 <col:17, col:29> '__size_t':'unsigned long' sizeof '__u32':'unsigned int'
+| | |-ImplicitCastExpr 0x70d100608 <line:21:19, col:31> '__u32':'unsigned int' <IntegralCast>
+| | | `-UnaryExprOrTypeTraitExpr 0x70d100370 <col:19, col:31> '__size_t':'unsigned long' sizeof '__u64':'unsigned long long'
+| | |-ImplicitCastExpr 0x70d100620 <line:22:20> '__u32':'unsigned int' <IntegralCast>
+| | | `-IntegerLiteral 0x70d1003d0 <col:20> 'int' 64
+| | `-ImplicitCastExpr 0x70d100638 <line:23:18> '__u32':'unsigned int' <IntegralCast>
+| |   `-IntegerLiteral 0x70d100430 <col:18> 'int' 0
+| |-SectionAttr 0x70d100130 <line:12:31, col:40> section "maps"
+| `-UsedAttr 0x70d1001a0 <col:43>
+|-VarDecl 0x70d100898 <line:26:1, col:76> col:16 used bpf_map_lookup_elem 'void *(*)(void *, const void *)' static cinit
+| `-ImplicitCastExpr 0x70d100960 <col:67, col:76> 'void *(*)(void *, const void *)' <BitCast>
+|   `-CStyleCastExpr 0x70d100938 <col:67, col:76> 'void *' <IntegralToPointer>
+|     `-IntegerLiteral 0x70d100900 <col:76> 'int' 1
+|-RecordDecl 0x70d1009c0 <line:28:1, line:30:1> line:28:8 struct xdp_md definition
+| |-FieldDecl 0x70d100a58 <line:29:5, col:11> col:11 data '__u32':'unsigned int'
+| |-FieldDecl 0x70d100ac0 <col:5, col:17> col:17 data_end '__u32':'unsigned int'
+| |-FieldDecl 0x70d100b28 <col:5, col:27> col:27 data_meta '__u32':'unsigned int'
+| |-FieldDecl 0x70d100b90 <col:5, col:38> col:38 referenced ingress_ifindex '__u32':'unsigned int'
+| `-FieldDecl 0x70d100bf8 <col:5, col:55> col:55 rx_queue_index '__u32':'unsigned int'
+`-FunctionDecl 0x70d100e48 <line:12:16, ex/map/map_miss_differs.c:14:1> line:5:16 used prog 'int (struct xdp_md *)'
+  |-ParmVarDecl 0x70d100d30 <col:21, col:36> col:36 used ctx 'struct xdp_md *'
+  |-CompoundStmt 0x70d1035f8 <line:6:1, line:14:1>
+  | |-DeclStmt 0x70d1030e8 <line:7:5, col:37>
+  | | `-VarDecl 0x70d103000 <col:5, col:22> col:11 used key '__u32':'unsigned int' cinit
+  | |   `-ImplicitCastExpr 0x70d1030d0 <col:17, col:22> '__u32':'unsigned int' <LValueToRValue>
+  | |     `-MemberExpr 0x70d1030a0 <col:17, col:22> '__u32':'unsigned int' lvalue ->ingress_ifindex 0x70d100b90
+  | |       `-ImplicitCastExpr 0x70d103088 <col:17> 'struct xdp_md *' <LValueToRValue>
+  | |         `-DeclRefExpr 0x70d103068 <col:17> 'struct xdp_md *' lvalue ParmVar 0x70d100d30 'ctx' 'struct xdp_md *'
+  | |-DeclStmt 0x70d103400 <line:8:5, col:52>
+  | | `-VarDecl 0x70d1031a0 <col:5, col:51> col:12 used v '__u64 *' cinit
+  | |   `-ImplicitCastExpr 0x70d1033e8 <col:16, col:51> '__u64 *' <BitCast>
+  | |     `-CallExpr 0x70d103380 <col:16, col:51> 'void *'
+  | |       |-ImplicitCastExpr 0x70d103368 <col:16> 'void *(*)(void *, const void *)' <LValueToRValue>
+  | |       | `-DeclRefExpr 0x70d103208 <col:16> 'void *(*)(void *, const void *)' lvalue Var 0x70d100898 'bpf_map_lookup_elem' 'void *(*)(void *, const void *)'
+  | |       |-ImplicitCastExpr 0x70d1033b8 <col:36, col:37> 'void *' <BitCast>
+  | |       | `-UnaryOperator 0x70d1032b0 <col:36, col:37> 'struct bpf_map_def *' prefix '&' cannot overflow
+  | |       |   `-DeclRefExpr 0x70d103228 <col:37> 'struct bpf_map_def' lvalue Var 0x70d1000c8 'counters' 'struct bpf_map_def'
+  | |       `-ImplicitCastExpr 0x70d1033d0 <col:47, col:48> 'const void *' <BitCast>
+  | |         `-UnaryOperator 0x70d103350 <col:47, col:48> '__u32 *' prefix '&' cannot overflow
+  | |           `-DeclRefExpr 0x70d1032c8 <col:48> '__u32':'unsigned int' lvalue Var 0x70d103000 'key' '__u32':'unsigned int'
+  | |-IfStmt 0x70d103498 <line:9:5, line:10:16>
+  | | |-UnaryOperator 0x70d103450 <line:9:9, col:10> 'int' prefix '!' cannot overflow
+  | | | `-ImplicitCastExpr 0x70d103438 <col:10> '__u64 *' <LValueToRValue>
+  | | |   `-DeclRefExpr 0x70d103418 <col:10> '__u64 *' lvalue Var 0x70d1031a0 'v' '__u64 *'
+  | | `-ReturnStmt 0x70d103488 <line:10:9, col:16>
+  | |   `-IntegerLiteral 0x70d103468 <col:16> 'int' 3
+  | |-IfStmt 0x70d1035a8 <line:11:5, line:12:16>
+  | | |-BinaryOperator 0x70d103558 <line:11:9, col:14> 'int' '>'
+  | | | |-ImplicitCastExpr 0x70d103528 <col:9, col:10> '__u64':'unsigned long long' <LValueToRValue>
+  | | | | `-UnaryOperator 0x70d1034f0 <col:9, col:10> '__u64':'unsigned long long' lvalue prefix '*' cannot overflow
+  | | | |   `-ImplicitCastExpr 0x70d1034d8 <col:10> '__u64 *' <LValueToRValue>
+  | | | |     `-DeclRefExpr 0x70d1034b8 <col:10> '__u64 *' lvalue Var 0x70d1031a0 'v' '__u64 *'
+  | | | `-ImplicitCastExpr 0x70d103540 <col:14> '__u64':'unsigned long long' <IntegralCast>
+  | | |   `-IntegerLiteral 0x70d103508 <col:14> 'int' 100
+  | | `-ReturnStmt 0x70d103598 <line:12:9, col:16>
+  | |   `-IntegerLiteral 0x70d103578 <col:16> 'int' 2
+  | `-ReturnStmt 0x70d1035e8 <line:13:5, col:12>
+  |   `-IntegerLiteral 0x70d1035c8 <col:12> 'int' 0
+  |-SectionAttr 0x70d100ef8 <ex/map/map_common.h:12:31, col:40> section "xdp"
+  `-UsedAttr 0x70d100f68 <col:43>

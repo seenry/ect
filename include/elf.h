@@ -58,11 +58,33 @@ typedef struct {
 #define SHF_ALLOC     0x2
 #define SHF_EXECINSTR 0x4
 
+typedef struct {
+    Elf64_Addr    r_offset;
+    Elf64_Xword   r_info;
+} Elf64_Rel;
+
+typedef struct {
+    Elf64_Addr    r_offset;
+    Elf64_Xword   r_info;
+    int64_t       r_addend;
+} Elf64_Rela;
+
 // Section header types
 #define SHT_NULL     0
 #define SHT_PROGBITS 1
 #define SHT_SYMTAB   2
 #define SHT_STRTAB   3
+#define SHT_RELA     4
+#define SHT_REL      9
+
+// Relocation entry macros
+#define ELF64_R_SYM(i)  ((uint32_t)((i) >> 32))
+#define ELF64_R_TYPE(i) ((uint32_t)((i) & 0xffffffff))
+
+// The only BPF relocation the translator reads: a 64-bit immediate patched
+// with a map address (libbpf rewrites the LD_IMM64's src_reg to 1 at load
+// time, so the object file itself carries no other marker).
+#define R_BPF_64_64  1
 
 // Symbol table entry macros
 #define ELF64_ST_TYPE(i) ((i) & 0xf)

@@ -35,13 +35,18 @@
  *
  * ── Memory model ─────────────────────────────────────────────────────
  *
- * Two declared regions:
- *   region 1 "ctx"  — the struct the program is called with (xdp_md).
- *   region 2 "pkt"  — the packet, reached through ctx->data / ctx->data_end.
+ * Declared regions:
+ *   region 1  "ctx"  — the struct the program is called with.  WHICH struct,
+ *                      and so how long the region is, comes from the program's
+ *                      section name; see [ctx_layout_for].
+ *   region 2  "pkt"  — the packet, reached through ctx->data / ctx->data_end.
+ *   region 10+       — one per BPF map, ordered by map name.
  *
- * Both are declared unconditionally and with fixed lengths, because
+ * The first two are declared unconditionally and with fixed lengths, because
  * SmtModuleQuery.modnet_equivalence_checker refuses to compare two programs
- * that do not declare identical regions.
+ * that do not declare identical regions.  Map regions are discovered from the
+ * object and named by sorted map name for the same reason: two lowerings of
+ * one source declare the same maps, but not necessarily in the same order.
  *
  * The BPF stack is NOT a region.  The verifier requires every stack access to
  * use a compile-time-constant offset from r10, so each distinct slot becomes
@@ -51,13 +56,10 @@
  * and -O2 (which does not) as inequivalent on a difference nothing can
  * observe.
  *
- * Memory is word-addressed, not byte-addressed: a store of width w occupies
- * the single cell at its base address, and a load of a different width at
- * that address reads ErrorVal (the load's cast checks the cell's type).  This
- * is exact for programs that access a given address at a consistent width --
- * which compiled C does -- and wrong for ones that punt a u32 and read back
- * its second byte.  Such a program is not rejected; it just gets ErrorVal,
- * consistently in both versions being compared.
+ * Memory is byte-addressed: a region is an array of u8 cells and a width-w
+ * access covers w consecutive cells, little-endian, which the IR's
+ * LoadOp/StoreOp do for us.  So a u16 store really is the two u8 stores -O2
+ * coalesces it from, and type punning reads back what was written.
  *
  * ── Control flow ─────────────────────────────────────────────────────
  *
@@ -87,17 +89,22 @@
  * Blocks are emitted in instruction order, which is a topological order iff
  * every jump goes forward.  Backward jumps (loops) are rejected.
  *
+ * A CALL ends its block for the same reason a conditional jump does: a map
+ * lookup chooses between a value pointer and NULL, and that choice is a match
+ * pattern, which is only read on entry to a transformer.
+ *
  * ── Not supported ────────────────────────────────────────────────────
  *
  * Reported on stderr, and the exit status is non-zero so a build does not
  * silently produce a program that means something else:
- *   - CALL (helper calls, subprogram calls)
+ *   - CALL, except bpf_map_lookup_elem (see "Maps" above)
  *   - shifts by a register operand (the IR has no shift operator; shifts by a
- *     constant become multiply/divide by a power of two)
- *   - BPF_END (byte-swap)
+ *     constant become multiply/divide by a power of two, and so do the byte
+ *     swaps in [emit_bswap])
  *   - atomics
  *   - backward jumps
  *   - memory accesses through a register whose region could not be determined
+ *   - a ctx access outside the modelled struct (see [ctx_access_ok])
  */
 
 #include <stdio.h>
@@ -112,8 +119,6 @@
 #include "elf.h"
 #include "bpf.h"
 
-/* bpf.h predates the split of the old BPF_RET class; 0x06 is BPF_JMP32. */
-#define BPF_JMP32 0x06
 /* Wide immediate load (BPF_LD | BPF_IMM | BPF_DW), a two-slot instruction. */
 #define BPF_LD_IMM64 0x18
 
@@ -127,10 +132,21 @@
 
 #define REGION_CTX      1
 #define REGION_PKT      2
+#define REGION_MAP(i)   (10 + (i))      /* one region per declared BPF map  */
 #define REGION_NONE     99              /* undeclared: loads read ErrorVal  */
 
-#define CTX_LEN         16              /* bytes of struct xdp_md modelled  */
-#define PKT_LEN         32              /* bytes of packet modelled         */
+/* Bytes of packet modelled.  It has to reach past the headers a filter
+   actually parses, or the reads past it overrun, the run rejects, and the
+   tail of the program is silently dead -- suricata's filter.c reads the IPv4
+   daddr at packet offset 30..33, so 32 made half of it unreachable.  64
+   covers ethernet + IPv4 + the start of a TCP header. */
+#define PKT_LEN         64
+
+#define MAX_MAPS        16
+#define MAP_MAX_SLOTS   4               /* slots modelled per map           */
+
+/* The only helper that is translated rather than rejected. */
+#define BPF_FUNC_map_lookup_elem  1
 
 #define MOD_PARSER      1
 #define MOD_DEPARSER    2
@@ -181,13 +197,21 @@ static void scan_used_regs(struct bpf_insn *insns, size_t n) {
             break;
         case BPF_LDX: case BPF_STX:
             mark_reg(insns[i].dst_reg); mark_reg(insns[i].src_reg); break;
-        case BPF_ST: case BPF_LD:
+        case BPF_ST:
             mark_reg(insns[i].dst_reg); break;
+        case BPF_LD:
+            /* LD_ABS/LD_IND always write r0 (which the encoding's dst_reg
+               already says) and LD_IND reads src_reg as the offset. */
+            mark_reg(insns[i].dst_reg);
+            if (BPF_MODE(insns[i].code) == BPF_IND) mark_reg(insns[i].src_reg);
+            break;
         default:
             if (is_jmp_class(insns[i].code)) {
                 uint8_t op = BPF_OP(insns[i].code);
                 if (op == BPF_EXIT) mark_reg(0);          /* EXIT reads r0 */
-                else if (op != BPF_JA && op != BPF_CALL) {
+                else if (op == BPF_CALL) {
+                    mark_reg(0); mark_reg(1); mark_reg(2);
+                } else if (op != BPF_JA) {
                     mark_reg(insns[i].dst_reg);
                     if (BPF_SRC(insns[i].code) == BPF_X) mark_reg(insns[i].src_reg);
                 }
@@ -256,6 +280,287 @@ static char *sv_to_coq_list(StrVec *sv) {
     return out;
 }
 
+/* ── Maps ───────────────────────────────────────────────────────────── */
+
+/*
+ * A BPF map becomes one declared IR memory region.  Its layout is
+ *
+ *   [0, nslots)                        presence bytes, 1 = the slot is filled
+ *   [nslots, nslots + nslots*value_size)   the values, slot i at
+ *                                          nslots + i*value_size
+ *
+ * and `bpf_map_lookup_elem` reads the presence byte to decide between
+ * returning the value pointer and returning NULL.  Both pieces are ordinary
+ * region cells, so they are free symbolic input: a lookup can hit or miss and
+ * the solver explores both, which is what keeps a program's `if (!v)` arm
+ * live.
+ *
+ * `nslots` is min(max_entries, MAP_MAX_SLOTS) and the slot is `key % nslots`.
+ * That is the model's one real abstraction -- see README.md, "What the map
+ * model does and does not say".
+ */
+typedef struct {
+    char     name[64];
+    uint32_t type;
+    uint32_t key_size;
+    uint32_t value_size;
+    uint32_t max_entries;
+    int      nslots;
+    int      len;          /* region length in bytes */
+} MapInfo;
+
+static MapInfo map_tbl[MAX_MAPS];
+static int     nmaps;
+
+static int map_region(int m)     { return REGION_MAP(m); }
+static int map_value_base(int m) { return map_tbl[m].nslots; }
+
+static int find_map(const char *name) {
+    for (int i = 0; i < nmaps; i++)
+        if (strcmp(map_tbl[i].name, name) == 0) return i;
+    return -1;
+}
+
+static void add_map(const char *name, uint32_t type, uint32_t ks, uint32_t vs,
+                    uint32_t me) {
+    if (find_map(name) >= 0) return;
+    if (nmaps >= MAX_MAPS) {
+        fprintf(stderr, "bpf_to_ir: more than %d maps\n", MAX_MAPS);
+        had_error = 1;
+        return;
+    }
+    MapInfo *m = &map_tbl[nmaps++];
+    snprintf(m->name, sizeof(m->name), "%s", name);
+    m->type = type;
+    m->key_size = ks;
+    m->value_size = vs;
+    m->max_entries = me;
+    m->nslots = (me == 0 || me > MAP_MAX_SLOTS) ? MAP_MAX_SLOTS : (int)me;
+    m->len = m->nslots * (1 + (int)vs);
+}
+
+/* Region ids have to agree between the two objects being compared, and
+   section and symbol order do not.  Names do. */
+static int map_name_cmp(const void *a, const void *b) {
+    return strcmp(((const MapInfo *)a)->name, ((const MapInfo *)b)->name);
+}
+
+/* ── BTF ────────────────────────────────────────────────────────────── */
+
+/*
+ * Modern maps carry their sizes only in BTF: the `.maps` section itself is a
+ * block of zeroed pointers.  Enough of BTF is parsed here to answer "how big
+ * is the key, how big is the value, how many entries" for each member of the
+ * `.maps` data section.
+ */
+#define BTF_MAGIC 0xeB9F
+
+struct btf_header {
+    uint16_t magic;
+    uint8_t  version;
+    uint8_t  flags;
+    uint32_t hdr_len;
+    uint32_t type_off, type_len;
+    uint32_t str_off,  str_len;
+};
+
+struct btf_type {
+    uint32_t name_off;
+    uint32_t info;      /* vlen:16, unused:8, kind:5, unused:2, kind_flag:1 */
+    uint32_t size;      /* or `type`, depending on the kind */
+};
+
+#define BTF_KIND(info) (((info) >> 24) & 0x1f)
+#define BTF_VLEN(info) ((info) & 0xffff)
+
+enum {
+    BTF_KIND_INT = 1, BTF_KIND_PTR, BTF_KIND_ARRAY, BTF_KIND_STRUCT,
+    BTF_KIND_UNION, BTF_KIND_ENUM, BTF_KIND_FWD, BTF_KIND_TYPEDEF,
+    BTF_KIND_VOLATILE, BTF_KIND_CONST, BTF_KIND_RESTRICT, BTF_KIND_FUNC,
+    BTF_KIND_FUNC_PROTO, BTF_KIND_VAR, BTF_KIND_DATASEC, BTF_KIND_FLOAT,
+    BTF_KIND_DECL_TAG, BTF_KIND_TYPE_TAG, BTF_KIND_ENUM64
+};
+
+struct btf_member    { uint32_t name_off, type, offset; };
+struct btf_array     { uint32_t type, index_type, nelems; };
+struct btf_var_sec   { uint32_t type, offset, size; };
+
+#define MAX_BTF_TYPES 65536
+
+static const struct btf_type *btf_types[MAX_BTF_TYPES];
+static uint32_t btf_ntypes;
+static const char *btf_strs;
+static uint32_t btf_strs_len;
+
+static const char *btf_name(uint32_t off) {
+    return (btf_strs && off < btf_strs_len) ? btf_strs + off : "";
+}
+
+static const struct btf_type *btf_get(uint32_t id) {
+    return (id > 0 && id < btf_ntypes) ? btf_types[id] : NULL;
+}
+
+/* Bytes of kind-specific data following the 12-byte header. */
+static size_t btf_extra(const struct btf_type *t) {
+    uint32_t vlen = BTF_VLEN(t->info);
+    switch (BTF_KIND(t->info)) {
+    case BTF_KIND_INT:        return 4;
+    case BTF_KIND_ARRAY:      return sizeof(struct btf_array);
+    case BTF_KIND_STRUCT:
+    case BTF_KIND_UNION:      return (size_t)vlen * sizeof(struct btf_member);
+    case BTF_KIND_ENUM:       return (size_t)vlen * 8;
+    case BTF_KIND_FUNC_PROTO: return (size_t)vlen * 8;
+    case BTF_KIND_VAR:        return 4;
+    case BTF_KIND_DATASEC:    return (size_t)vlen * sizeof(struct btf_var_sec);
+    case BTF_KIND_DECL_TAG:   return 4;
+    case BTF_KIND_ENUM64:     return (size_t)vlen * 12;
+    default:                  return 0;
+    }
+}
+
+/* Strip typedefs and qualifiers. */
+static const struct btf_type *btf_strip(uint32_t id, uint32_t *out_id) {
+    for (int guard = 0; guard < 32; guard++) {
+        const struct btf_type *t = btf_get(id);
+        if (!t) return NULL;
+        switch (BTF_KIND(t->info)) {
+        case BTF_KIND_TYPEDEF: case BTF_KIND_VOLATILE: case BTF_KIND_CONST:
+        case BTF_KIND_RESTRICT: case BTF_KIND_TYPE_TAG:
+            id = t->size;   /* the union's `type` arm */
+            continue;
+        default:
+            if (out_id) *out_id = id;
+            return t;
+        }
+    }
+    return NULL;
+}
+
+static uint32_t btf_size_of(uint32_t id) {
+    const struct btf_type *t = btf_strip(id, NULL);
+    if (!t) return 0;
+    switch (BTF_KIND(t->info)) {
+    case BTF_KIND_INT: case BTF_KIND_STRUCT: case BTF_KIND_UNION:
+    case BTF_KIND_ENUM: case BTF_KIND_ENUM64: case BTF_KIND_FLOAT:
+    case BTF_KIND_DATASEC:
+        return t->size;
+    case BTF_KIND_PTR:
+        return 8;
+    case BTF_KIND_ARRAY: {
+        const struct btf_array *a = (const struct btf_array *)(t + 1);
+        return a->nelems * btf_size_of(a->type);
+    }
+    default:
+        return 0;
+    }
+}
+
+/* `__uint(name, val)` is `int (*name)[val]`: the value is the array length. */
+static uint32_t btf_uint_value(uint32_t id) {
+    const struct btf_type *p = btf_strip(id, NULL);
+    if (!p || BTF_KIND(p->info) != BTF_KIND_PTR) return 0;
+    const struct btf_type *a = btf_strip(p->size, NULL);
+    if (!a || BTF_KIND(a->info) != BTF_KIND_ARRAY) return 0;
+    return ((const struct btf_array *)(a + 1))->nelems;
+}
+
+/* `__type(name, val)` is `typeof(val) *name`: the value is the pointee. */
+static uint32_t btf_type_size(uint32_t id) {
+    const struct btf_type *p = btf_strip(id, NULL);
+    if (!p || BTF_KIND(p->info) != BTF_KIND_PTR) return 0;
+    return btf_size_of(p->size);
+}
+
+static void btf_read_map_struct(const char *name, uint32_t struct_id) {
+    uint32_t sid = 0;
+    const struct btf_type *st = btf_strip(struct_id, &sid);
+    if (!st || BTF_KIND(st->info) != BTF_KIND_STRUCT) {
+        fprintf(stderr, "bpf_to_ir: map %s: BTF entry is not a struct\n", name);
+        had_error = 1;
+        return;
+    }
+    uint32_t type = 0, ks = 0, vs = 0, me = 0;
+    const struct btf_member *mem = (const struct btf_member *)(st + 1);
+    for (uint32_t i = 0; i < BTF_VLEN(st->info); i++) {
+        const char *mn = btf_name(mem[i].name_off);
+        if      (!strcmp(mn, "type"))        type = btf_uint_value(mem[i].type);
+        else if (!strcmp(mn, "max_entries")) me   = btf_uint_value(mem[i].type);
+        else if (!strcmp(mn, "key_size"))    ks   = btf_uint_value(mem[i].type);
+        else if (!strcmp(mn, "value_size"))  vs   = btf_uint_value(mem[i].type);
+        else if (!strcmp(mn, "key"))         ks   = btf_type_size(mem[i].type);
+        else if (!strcmp(mn, "value"))       vs   = btf_type_size(mem[i].type);
+    }
+    if (ks == 0 || vs == 0) {
+        fprintf(stderr, "bpf_to_ir: map %s: BTF gives key_size=%u value_size=%u; "
+                        "the map cannot be sized\n", name, ks, vs);
+        had_error = 1;
+        return;
+    }
+    add_map(name, type, ks, vs, me);
+}
+
+/* Walk `.BTF` and register every map declared in the `.maps` data section. */
+static void discover_btf_maps(const char *btf, size_t btf_len) {
+    if (btf_len < sizeof(struct btf_header)) return;
+    const struct btf_header *h = (const struct btf_header *)btf;
+    if (h->magic != BTF_MAGIC) {
+        fprintf(stderr, "bpf_to_ir: .BTF has magic 0x%x, not 0x%x "
+                        "(big-endian object?)\n", h->magic, BTF_MAGIC);
+        had_error = 1;
+        return;
+    }
+    const char *base = btf + h->hdr_len;
+    if (h->hdr_len + (size_t)h->type_off + h->type_len > btf_len ||
+        h->hdr_len + (size_t)h->str_off  + h->str_len  > btf_len) {
+        fprintf(stderr, "bpf_to_ir: .BTF is truncated\n");
+        had_error = 1;
+        return;
+    }
+    btf_strs = base + h->str_off;
+    btf_strs_len = h->str_len;
+
+    const char *p   = base + h->type_off;
+    const char *end = p + h->type_len;
+    btf_ntypes = 1;                     /* id 0 is void */
+    while (p + sizeof(struct btf_type) <= end && btf_ntypes < MAX_BTF_TYPES) {
+        const struct btf_type *t = (const struct btf_type *)p;
+        size_t sz = sizeof(struct btf_type) + btf_extra(t);
+        if (p + sz > end) break;
+        btf_types[btf_ntypes++] = t;
+        p += sz;
+    }
+
+    for (uint32_t id = 1; id < btf_ntypes; id++) {
+        const struct btf_type *t = btf_types[id];
+        if (BTF_KIND(t->info) != BTF_KIND_DATASEC) continue;
+        if (strcmp(btf_name(t->name_off), ".maps") != 0) continue;
+        const struct btf_var_sec *vs = (const struct btf_var_sec *)(t + 1);
+        for (uint32_t i = 0; i < BTF_VLEN(t->info); i++) {
+            const struct btf_type *var = btf_get(vs[i].type);
+            if (!var || BTF_KIND(var->info) != BTF_KIND_VAR) continue;
+            btf_read_map_struct(btf_name(var->name_off), var->size);
+        }
+    }
+}
+
+/*
+ * The legacy declaration is `struct bpf_map_def SEC("maps")`, whose five u32
+ * fields sit in the section data, so no BTF is needed.
+ */
+static void discover_legacy_maps(const char *sec, size_t sec_len, int sec_idx,
+                                 const Elf64_Sym *syms, size_t nsyms,
+                                 const char *strtab) {
+    for (size_t i = 0; i < nsyms; i++) {
+        if (syms[i].st_shndx != (Elf64_Half)sec_idx) continue;
+        if (ELF64_ST_TYPE(syms[i].st_info) == STT_SECTION) continue;
+        uint64_t off = syms[i].st_value;
+        if (off + 5 * sizeof(uint32_t) > sec_len) continue;
+        uint32_t f[5];
+        memcpy(f, sec + off, sizeof(f));
+        add_map(strtab + syms[i].st_name, f[0], f[1], f[2], f[3]);
+    }
+}
+
 /* ── Pointer provenance ─────────────────────────────────────────────── */
 
 /*
@@ -265,13 +570,20 @@ static char *sv_to_coq_list(StrVec *sv) {
  *
  * T_SCALAR is a plain integer; T_UNKNOWN is the join of two disagreeing tags,
  * and using it as a memory base is an error rather than a guess.
+ *
+ * T_MAP is the map object itself, which is only ever an argument to a helper;
+ * T_MAPVAL is what a successful lookup returns, a pointer into the map's
+ * region.  Both carry the map's index in `mapidx`, since which map it is
+ * decides which region a dereference names.
  */
-typedef enum { T_SCALAR = 0, T_CTX, T_PKT, T_STACK, T_UNKNOWN } PtrTag;
+typedef enum { T_SCALAR = 0, T_CTX, T_PKT, T_STACK, T_MAP, T_MAPVAL,
+               T_UNKNOWN } PtrTag;
 
 typedef struct {
     PtrTag  tag;
     int64_t off;        /* offset from the region base, if known */
     int     off_known;
+    int     mapidx;     /* T_MAP / T_MAPVAL only; -1 otherwise */
 } RegInfo;
 
 typedef struct {
@@ -281,18 +593,23 @@ typedef struct {
 } AbsState;
 
 static RegInfo scalar(void) {
-    RegInfo r = { T_SCALAR, 0, 1 };
+    RegInfo r = { T_SCALAR, 0, 1, -1 };
     return r;
 }
 static RegInfo pointer(PtrTag t, int64_t off) {
-    RegInfo r = { t, off, 1 };
+    RegInfo r = { t, off, 1, -1 };
+    return r;
+}
+static RegInfo map_pointer(PtrTag t, int64_t off, int mapidx) {
+    RegInfo r = { t, off, 1, mapidx };
     return r;
 }
 
 static RegInfo join_reg(RegInfo a, RegInfo b) {
-    RegInfo r;
-    if (a.tag != b.tag) { r.tag = T_UNKNOWN; r.off = 0; r.off_known = 0; return r; }
+    RegInfo r = { T_UNKNOWN, 0, 0, -1 };
+    if (a.tag != b.tag || a.mapidx != b.mapidx) return r;
     r.tag = a.tag;
+    r.mapidx = a.mapidx;
     r.off_known = a.off_known && b.off_known && a.off == b.off;
     r.off = r.off_known ? a.off : 0;
     return r;
@@ -308,15 +625,88 @@ static void join_state(AbsState *dst, const AbsState *src) {
 }
 
 /*
- * Which ctx fields hold pointers into the packet.  This is the one piece of
- * program-type knowledge in the translator: for XDP, `struct xdp_md` starts
- * with `__u32 data; __u32 data_end;`, so a load from those two offsets
- * produces a packet pointer and anything else produces a scalar.  The value
- * loaded is still whatever the (symbolic) ctx region holds -- the offsets the
- * program then computes are compared between the two versions, not assumed.
+ * The context a program is called with, which is the one piece of
+ * program-type knowledge in the translator.  Two things depend on it: how big
+ * the ctx region is, and which of its fields hold pointers into the packet --
+ * a load from those two offsets produces a packet pointer, anything else a
+ * scalar.  The value loaded is still whatever the (symbolic) ctx region
+ * holds; the offsets the program computes from it are compared between the
+ * two versions, not assumed.
+ *
+ * Getting the length wrong is not a small error.  `struct __sk_buff` puts
+ * `vlan_tci` at offset 24 and `data` at 76, so modelling an `__sk_buff`
+ * program with `struct xdp_md`'s 20 bytes makes every field access an
+ * out-of-bounds read.  Those are total, but they record an overrun, and an
+ * overrun rejects the run at the sink -- so the program is modelled as one
+ * that always rejects, and two such programs are "equivalent" whatever they
+ * compute.  Hence [ctx_access_ok] below, which refuses the translation rather
+ * than emitting that silently.
  */
+typedef struct {
+    const char *name;
+    int         len;          /* bytes of the struct modelled */
+    int64_t     data_off;     /* the packet-pointer fields    */
+    int64_t     data_end_off;
+} CtxLayout;
+
+static const CtxLayout ctx_xdp_md  = { "xdp_md",   20,  0,  4 };
+static const CtxLayout ctx_sk_buff = { "__sk_buff", 192, 76, 80 };
+
+static const CtxLayout *ctx_layout = &ctx_xdp_md;
+
+/* Set by --ctx=NAME, for the programs whose section name is a project's own
+   convention rather than a libbpf program type (suricata's "loadbalancer",
+   say) and so says nothing about the context. */
+static const CtxLayout *ctx_override = NULL;
+
+static const CtxLayout *ctx_layout_by_name(const char *n) {
+    if (!strcmp(n, "xdp_md") || !strcmp(n, "xdp"))     return &ctx_xdp_md;
+    if (!strcmp(n, "__sk_buff") || !strcmp(n, "skb"))  return &ctx_sk_buff;
+    return NULL;
+}
+
+/*
+ * Which context a program section gets.  The names are the conventional
+ * libbpf program-type prefixes; an unrecognised one is XDP only if it says
+ * so, because guessing wrong is the silent failure described above.
+ */
+static const CtxLayout *ctx_layout_for(const char *sec) {
+    /* Program types whose context is struct __sk_buff.  Only these -- a name
+       that is merely network-ish is NOT enough: sk_reuseport, sk_msg,
+       sockops, sk_lookup and the cgroup/sock* hooks each have their own
+       context struct, and reaching them through this one would model a
+       different program while still translating cleanly. */
+    static const char *skb_prefixes[] = {
+        "socket", "filter", "tc", "classifier", "action", "cgroup_skb",
+        "cgroup/skb", "sk_skb", "lwt_", "flow_dissector", NULL
+    };
+    if (!strncmp(sec, "xdp", 3)) return &ctx_xdp_md;
+    for (int i = 0; skb_prefixes[i]; i++)
+        if (!strncmp(sec, skb_prefixes[i], strlen(skb_prefixes[i])))
+            return &ctx_sk_buff;
+    return NULL;
+}
+
 static int ctx_field_is_pkt_ptr(int64_t off) {
-    return off == 0 || off == 4;
+    return off == ctx_layout->data_off || off == ctx_layout->data_end_off;
+}
+
+/*
+ * A ctx access at a statically known offset must land inside the region.  The
+ * offset is known for essentially every real ctx access -- the verifier
+ * requires it -- so this catches a wrong or missing layout at translation
+ * time instead of at the both-rejected disjunct of the equivalence checker.
+ */
+static int ctx_access_ok(size_t idx, RegInfo base, int64_t insn_off,
+                         int nbytes, const char *what) {
+    if (base.tag != T_CTX || !base.off_known) return 1;
+    int64_t lo = base.off + insn_off;
+    if (lo >= 0 && lo + nbytes <= ctx_layout->len) return 1;
+    unsupported(idx, "%s at ctx offset %lld..%lld, outside the %d bytes of "
+                     "struct %s that are modelled",
+                what, (long long)lo, (long long)(lo + nbytes), ctx_layout->len,
+                ctx_layout->name);
+    return 0;
 }
 
 /* ── Stack slot headers ─────────────────────────────────────────────── */
@@ -433,6 +823,43 @@ static void emit_arsh_const(size_t idx, int reg, int k, int width_bits) {
 }
 
 /*
+ * A byte swap, built out of the operators the IR does have.  Same trick as
+ * emit_arsh_const: there is no shift, but a shift by a constant is a multiply
+ * or divide by a power of two, so byte i of the source
+ *
+ *   (src / 2^(8i)) & 0xff
+ *
+ * lands at byte (n-1-i) of the result by multiplying it back up.  The partial
+ * results occupy disjoint bits, so the accumulate is an or.
+ *
+ * Everything is done at W64 with explicit masks rather than at the operand's
+ * own width, so the source is read once and the caller may pass the same
+ * header as [src] and [target].  Costs 4 ops per byte, so 8 for a u16 and 32
+ * for a u64.
+ */
+static void emit_bswap(size_t idx, int src, int nbytes, int target) {
+    if (nbytes <= 1) {
+        if (src != target) emit_move(target, src);
+        return;
+    }
+    int t_src = fresh_tmp(idx);
+    int t_acc = fresh_tmp(idx);
+    int t_b   = fresh_tmp(idx);
+
+    emit_move(t_src, src);
+    emit_set(t_acc, 0);
+    for (int i = 0; i < nbytes; i++) {
+        int up = 8 * (nbytes - 1 - i);
+        if (i == 0) emit_move(t_b, t_src);
+        else emit_binop("DivOp", "W64", hdr(t_src), konst(1ULL << (8 * i)), t_b);
+        emit_binop("AndOp", "W64", hdr(t_b), konst(0xffULL), t_b);
+        if (up) emit_binop("MulOp", "W64", hdr(t_b), konst(1ULL << up), t_b);
+        emit_binop("OrOp", "W64", hdr(t_acc), hdr(t_b), t_acc);
+    }
+    emit_move(target, t_acc);
+}
+
+/*
  * ALU at 64 bits: operate on the register headers directly.
  * ALU at 32 bits: narrow both operands, operate at W32, widen back -- which
  * is also the zero-extension BPF's 32-bit ALU performs on the upper half.
@@ -520,9 +947,27 @@ static void translate_alu(size_t idx, struct bpf_insn *in, int is64, AbsState *s
         return;
     }
 
-    case BPF_END:
-        unsupported(idx, "BPF_END (byte swap)");
+    case BPF_END: {
+        /* [imm] is the width in BITS, and the result is written back at that
+           width -- the kernel assigns through a u16/u32, so the register's
+           upper bits are zeroed whichever direction the conversion goes. */
+        int bits = in->imm;
+        if (bits != 16 && bits != 32 && bits != 64) {
+            unsupported(idx, "BPF_END with a width of %d bits", bits);
+            return;
+        }
+        if (bits != 64)
+            emit_binop("AndOp", "W64", hdr(hd),
+                       konst((1ULL << bits) - 1ULL), hd);
+        /* BPF_END is defined against the HOST's byte order, and this
+           translator models a little-endian host: BPF_TO_BE (the BPF_X source
+           bit) is a real swap and BPF_TO_LE is the truncation alone.  The
+           ALU64 spelling is BPF v4's unconditional `bswap`, which swaps
+           regardless. */
+        if (is64 || BPF_SRC(in->code) == BPF_X)
+            emit_bswap(idx, hd, bits / 8, hd);
         return;
+    }
 
     default: {
         const char *bin = alu_binop_name(op);
@@ -548,10 +993,13 @@ static void translate_alu(size_t idx, struct bpf_insn *in, int is64, AbsState *s
 
 /* ── Memory ─────────────────────────────────────────────────────────── */
 
-static int region_of_tag(PtrTag t) {
-    switch (t) {
+static int region_of(RegInfo r) {
+    switch (r.tag) {
     case T_CTX: return REGION_CTX;
     case T_PKT: return REGION_PKT;
+    case T_MAPVAL:
+        return (r.mapidx >= 0 && r.mapidx < nmaps) ? map_region(r.mapidx)
+                                                   : REGION_NONE;
     default:    return REGION_NONE;
     }
 }
@@ -600,9 +1048,10 @@ static void translate_ldx(size_t idx, struct bpf_insn *in, AbsState *st) {
         return;
     }
 
-    int region = region_of_tag(base.tag);
+    int region = region_of(base);
     if (region == REGION_NONE)
         unsupported(idx, "load through r%d, whose region is unknown", src);
+    ctx_access_ok(idx, base, in->off, nbytes, "load");
 
     int t_addr = emit_address(idx, H_REG(src), in->off);
     int t_val = fresh_tmp(idx);
@@ -649,9 +1098,10 @@ static void translate_store(size_t idx, struct bpf_insn *in, AbsState *st,
         return;
     }
 
-    int region = region_of_tag(base.tag);
+    int region = region_of(base);
     if (region == REGION_NONE)
         unsupported(idx, "store through r%d, whose region is unknown", dst);
+    ctx_access_ok(idx, base, in->off, nbytes, "store");
 
     int t_addr = emit_address(idx, H_REG(dst), in->off);
     if (from_reg) {
@@ -662,6 +1112,147 @@ static void translate_store(size_t idx, struct bpf_insn *in, AbsState *st,
         /* A constant operand adopts the op's type, so no cast is needed. */
         emit_store(w, region, hdr(t_addr), konst(imm));
     }
+}
+
+/* ── Map lookup ─────────────────────────────────────────────────────── */
+
+/* Which map each LD_IMM64 loads, from the object's relocations; -1 if none. */
+static int insn_map_idx[MAX_INSNS + 1];
+
+/*
+ * Translate `r0 = bpf_map_lookup_elem(r1, r2)`.
+ *
+ * The straight-line part -- read the key, pick the slot, read the slot's
+ * presence byte and compute its value pointer -- is emitted into the current
+ * block.  Choosing between the pointer and NULL is a branch, so it is handed
+ * back as a condition plus the op each arm runs, and the caller emits it with
+ * the same two-transformer shape a conditional jump uses.
+ *
+ * Returns 0 (having reported why) if the call cannot be translated.
+ */
+static int emit_map_lookup(size_t idx, AbsState *st, char **cond,
+                           char **arm_hit, char **arm_miss) {
+    RegInfo mp = st->reg[1], kp = st->reg[2];
+
+    if (mp.tag != T_MAP || mp.mapidx < 0) {
+        unsupported(idx, "bpf_map_lookup_elem: r1 is not a known map pointer");
+        return 0;
+    }
+    int m = mp.mapidx;
+    MapInfo *mi = &map_tbl[m];
+    if (mi->key_size != 1 && mi->key_size != 2 &&
+        mi->key_size != 4 && mi->key_size != 8) {
+        unsupported(idx, "map %s has a %u-byte key (only 1, 2, 4 and 8 are "
+                         "modelled)", mi->name, mi->key_size);
+        return 0;
+    }
+    const char *kw = width_name((int)mi->key_size);
+
+    tmp_next = 0;
+    int t_key = fresh_tmp(idx);
+
+    if (kp.tag == T_STACK) {
+        /* The usual shape: the key was written to a stack slot, which is a
+           header rather than a region cell. */
+        if (!kp.off_known) {
+            unsupported(idx, "map key at a non-constant stack offset");
+            return 0;
+        }
+        int slot = (int)(-kp.off);
+        int sh = stack_header(slot);
+        if (!sh) {
+            unsupported(idx, "map key outside the %d-byte frame (slot %d)",
+                        BPF_STACK_SIZE, slot);
+            return 0;
+        }
+        emit_cast(kw, "W64", hdr(sh), t_key);
+    } else {
+        int region = region_of(kp);
+        if (region == REGION_NONE) {
+            unsupported(idx, "map key through r2, whose region is unknown");
+            return 0;
+        }
+        int t_raw = fresh_tmp(idx);
+        emit_load(kw, region, hdr(H_REG(2)), t_raw);
+        emit_cast(kw, "W64", hdr(t_raw), t_key);
+    }
+
+    int t_slot = fresh_tmp(idx);
+    emit_binop("ModOp", "W64", hdr(t_key), konst((uint64_t)mi->nslots), t_slot);
+
+    int t_pres_raw = fresh_tmp(idx);
+    int t_pres     = fresh_tmp(idx);
+    emit_load("W8", map_region(m), hdr(t_slot), t_pres_raw);
+    emit_cast("W8", "W64", hdr(t_pres_raw), t_pres);
+
+    int t_vp = fresh_tmp(idx);
+    emit_binop("MulOp", "W64", hdr(t_slot), konst(mi->value_size), t_vp);
+    emit_binop("AddOp", "W64", hdr(t_vp),
+               konst((uint64_t)map_value_base(m)), t_vp);
+
+    *cond = xsprintf("(Coq_pair (Coq_pair %d CmpEq) (MatchConst 1 W64))", t_pres);
+    *arm_hit  = xsprintf("(StatelessOp AddOp W64 (OpHeader %d) (OpConst 0) %d)",
+                         t_vp, H_REG(0));
+    *arm_miss = xsprintf("(StatelessOp AddOp W64 (OpConst 0) (OpConst 0) %d)",
+                         H_REG(0));
+
+    /* r0 is the value pointer on the hit arm and 0 on the miss arm; the tag
+       is what a later dereference reads, and the program has to NULL-check
+       before dereferencing or the verifier would have rejected it. */
+    st->reg[0] = map_pointer(T_MAPVAL, 0, m);
+    for (int r = 1; r <= 5; r++) st->reg[r] = scalar();   /* clobbered */
+    return 1;
+}
+
+/* ── Classic-BPF packet loads ───────────────────────────────────────── */
+
+/*
+ * LD_ABS reads the packet at the constant in [imm]; LD_IND at [src_reg + imm].
+ * Three things are implicit in the instruction rather than encoded, because
+ * these lower to a call into the kernel rather than to a real load:
+ *
+ *   - the destination is always R0, and R1..R5 are clobbered;
+ *   - the value arrives converted from network to host byte order;
+ *   - an access past the end of the packet ABORTS the program, returning 0.
+ *
+ * The first two are emitted.  The third is not, and the difference is worth
+ * being precise about.  An access outside the packet region yields ErrorVal
+ * and records an overrun, and an overrun rejects the run at the sink -- a
+ * different terminal state from "returns 0", but a conservative one.  Two
+ * programs that both run off the packet both reject and still compare equal;
+ * one that runs off and one that does not are reported different, which is
+ * right unless the other happened to return 0 as well.  So the approximation
+ * can raise a false difference, never hide a real one.
+ *
+ * Note these index the packet region from 0 directly, rather than through
+ * ctx->data as an ordinary packet access does -- which is what the
+ * instruction means, and it makes the offset concrete where a ctx->data-based
+ * one stays symbolic.
+ */
+static void translate_ld_pkt(size_t idx, struct bpf_insn *in, AbsState *st) {
+    int nbytes = size_bytes(in->code);
+    if (nbytes == 8) {
+        /* Classic BPF had no 64-bit packet load and the verifier rejects one. */
+        unsupported(idx, "LD_ABS/LD_IND at 64 bits");
+        return;
+    }
+    const char *w = width_name(nbytes);
+    int is_ind = BPF_MODE(in->code) == BPF_IND;
+
+    int t_addr = fresh_tmp(idx);
+    if (is_ind)
+        emit_binop("AddOp", "W64", hdr(H_REG(in->src_reg)),
+                   konst((uint64_t)(int64_t)in->imm), t_addr);
+    else
+        emit_set(t_addr, (uint64_t)(int64_t)in->imm);
+
+    int t_val = fresh_tmp(idx);
+    emit_load(w, REGION_PKT, hdr(t_addr), t_val);
+    emit_cast(w, "W64", hdr(t_val), t_val);
+    emit_bswap(idx, t_val, nbytes, H_REG(0));
+
+    st->reg[0] = scalar();
+    for (int r = 1; r <= 5; r++) st->reg[r] = scalar();
 }
 
 /* ── Straight-line translation ──────────────────────────────────────── */
@@ -677,6 +1268,15 @@ static int translate_one(size_t idx, struct bpf_insn *insns, size_t n,
 
     if (in->code == BPF_LD_IMM64) {
         if (idx + 1 >= n) { unsupported(idx, "truncated LD_IMM64"); return 1; }
+        /* A map address.  The object file's src_reg is still 0 -- libbpf sets
+           it to BPF_PSEUDO_MAP_FD when it applies the relocation -- so the
+           relocation is the only marker there is.  The register's value is
+           never read; its tag is what names the region. */
+        if (insn_map_idx[idx] >= 0) {
+            emit_set(H_REG(in->dst_reg), 0);
+            st->reg[in->dst_reg] = map_pointer(T_MAP, 0, insn_map_idx[idx]);
+            return 2;
+        }
         if (in->src_reg != 0)
             unsupported(idx, "LD_IMM64 with src_reg=%d (map/pseudo immediate)",
                         in->src_reg);
@@ -696,7 +1296,12 @@ static int translate_one(size_t idx, struct bpf_insn *insns, size_t n,
         else translate_store(idx, in, st, 1);
         break;
     case BPF_ST:    translate_store(idx, in, st, 0); break;
-    case BPF_LD:    unsupported(idx, "legacy BPF_LD (abs/ind) load"); break;
+    case BPF_LD:
+        if (BPF_MODE(in->code) == BPF_ABS || BPF_MODE(in->code) == BPF_IND)
+            translate_ld_pkt(idx, in, st);
+        else
+            unsupported(idx, "BPF_LD in mode 0x%x", BPF_MODE(in->code));
+        break;
     default:        unsupported(idx, "instruction class 0x%x", cls); break;
     }
     return 1;
@@ -722,13 +1327,15 @@ static void find_leaders(struct bpf_insn *insns, size_t n) {
         if (insns[i].code == BPF_LD_IMM64) { i++; continue; }
         if (!is_jmp_class(insns[i].code)) continue;
         uint8_t op = BPF_OP(insns[i].code);
-        if (op == BPF_CALL) continue;
         /* `JA +0` is a jump to the next instruction.  clang emits a lot of
            them; splitting a block at each one would double the length of the
            module chain for nothing. */
         if (op == BPF_JA && insns[i].off == 0) continue;
         if (i + 1 < n) is_leader[i + 1] = 1;
-        if (op == BPF_EXIT) continue;
+        /* A CALL ends its block: a map lookup decides between a pointer and
+           NULL, and a decision is a match pattern, which is only read on
+           entry to a transformer. */
+        if (op == BPF_EXIT || op == BPF_CALL) continue;
         long target = (long)i + 1 + insns[i].off;
         if (target < 0 || (size_t)target > n) {
             unsupported(i, "jump target %ld is out of range", target);
@@ -951,6 +1558,8 @@ static void translate_program(struct bpf_insn *insns, size_t n) {
 
         int cond_swap = 0;
         char *cond = NULL;
+        /* Ops the two arms of the decision run, beyond setting the pc. */
+        char *arm_hit = NULL, *arm_miss = NULL;
         if (has_term && jmp_is_conditional(term->code))
             cond = emit_condition((size_t)(end - 1), term, &cond_swap);
 
@@ -964,8 +1573,18 @@ static void translate_program(struct bpf_insn *insns, size_t n) {
             if (op == BPF_EXIT) {
                 /* pc := 0; no later transformer guards on it. */
             } else if (op == BPF_CALL) {
-                unsupported((size_t)(end - 1), "CALL (helper or subprogram call)");
+                if (term->src_reg != 0)
+                    unsupported((size_t)(end - 1), "subprogram call");
+                else if (term->imm != BPF_FUNC_map_lookup_elem)
+                    unsupported((size_t)(end - 1), "helper call %d "
+                                "(only bpf_map_lookup_elem is modelled)",
+                                term->imm);
+                else
+                    emit_map_lookup((size_t)(end - 1), &st,
+                                    &cond, &arm_hit, &arm_miss);
                 if (end < (int)n) { fall_blk = block_of[end]; fall_pc = BLOCK_PC(end); }
+                /* Both arms rejoin at the next block. */
+                take_pc = fall_pc;
             } else if (op == BPF_JA) {
                 int t = end + term->off;
                 if (t >= 0 && t < (int)n) { take_blk = block_of[t]; take_pc = BLOCK_PC(t); }
@@ -995,6 +1614,7 @@ static void translate_program(struct bpf_insn *insns, size_t n) {
             sv_init(&dec_rules);
 
             sv_init(&dec_ops);
+            if (arm_hit) sv_push(&dec_ops, arm_hit);
             sv_push(&dec_ops, set_pc(first_pc));
             sv_push(&dec_rules,
                     rule(xsprintf("(Coq_cons (Coq_pair (Coq_pair %d CmpEq) "
@@ -1004,6 +1624,7 @@ static void translate_program(struct bpf_insn *insns, size_t n) {
             free(cond);
 
             sv_init(&dec_ops);
+            if (arm_miss) sv_push(&dec_ops, arm_miss);
             sv_push(&dec_ops, set_pc(second_pc));
             sv_push(&dec_rules,
                     rule(pc_guard(DECIDE_PC(start)), sv_to_coq_list(&dec_ops)));
@@ -1047,10 +1668,24 @@ static void emit_program(FILE *f) {
         sv_push(&edges, xsprintf("(%d %d)", m, m + 1));
     sv_push(&edges, xsprintf("(%d %d)", next_mod - 1, MOD_DEPARSER));
 
+    /* Regions: ctx, the packet, and one per declared map.  The checker
+       refuses to compare two programs whose declarations differ, and the two
+       objects declare the same maps because they come from one source. */
+    StrVec regions;
+    sv_init(&regions);
+    sv_push(&regions, xsprintf("((mr_id %d) (mr_len %d))",
+                               REGION_CTX, ctx_layout->len));
+    sv_push(&regions, xsprintf("((mr_id %d) (mr_len %d))", REGION_PKT, PKT_LEN));
+    for (int i = 0; i < nmaps; i++)
+        sv_push(&regions, xsprintf("((mr_id %d) (mr_len %d))",
+                                   map_region(i), map_tbl[i].len));
+
     fprintf(f, "(GeneralCaracaraProgramDef 0\n");
-    fprintf(f, "  (Coq_cons ((mr_id %d) (mr_len %d))\n"
-               "   (Coq_cons ((mr_id %d) (mr_len %d)) Coq_nil))\n",
-            REGION_CTX, CTX_LEN, REGION_PKT, PKT_LEN);
+    for (int i = 0; i < nmaps; i++)
+        fprintf(f, "  ; region %d = map %s (key %u, value %u, %d of %u slots)\n",
+                map_region(i), map_tbl[i].name, map_tbl[i].key_size,
+                map_tbl[i].value_size, map_tbl[i].nslots, map_tbl[i].max_entries);
+    fprintf(f, "  %s\n", sv_to_coq_list(&regions));
     fprintf(f, "  ((net_modules %s)\n", sv_to_coq_list(&all));
     fprintf(f, "   (net_edges (");
     for (int i = 0; i < edges.n; i++) fprintf(f, "%s%s", i ? " " : "", edges.v[i]);
@@ -1060,6 +1695,36 @@ static void emit_program(FILE *f) {
 }
 
 /* ── ELF ────────────────────────────────────────────────────────────── */
+
+/*
+ * Fill in insn_map_idx from the relocations that apply to section `sec`.  A
+ * map reference is an R_BPF_64_64 against a symbol that names a map, sitting
+ * on the LD_IMM64 that loads the map address.
+ */
+static void load_map_relocs(void *data, Elf64_Shdr *shdr, int nsec, int sec,
+                            const Elf64_Sym *syms, size_t nsyms,
+                            const char *strtab, size_t ninsns) {
+    for (int i = 0; i < nsec; i++) {
+        if (shdr[i].sh_type != SHT_REL && shdr[i].sh_type != SHT_RELA) continue;
+        if ((int)shdr[i].sh_info != sec) continue;
+
+        int is_rela = shdr[i].sh_type == SHT_RELA;
+        size_t esz = is_rela ? sizeof(Elf64_Rela) : sizeof(Elf64_Rel);
+        size_t n = shdr[i].sh_size / esz;
+        char *base = (char *)data + shdr[i].sh_offset;
+
+        for (size_t k = 0; k < n; k++) {
+            Elf64_Rel *r = (Elf64_Rel *)(base + k * esz);
+            if (ELF64_R_TYPE(r->r_info) != R_BPF_64_64) continue;
+            uint32_t si = ELF64_R_SYM(r->r_info);
+            if (si >= nsyms) continue;
+            int m = find_map(strtab + syms[si].st_name);
+            if (m < 0) continue;
+            size_t idx = r->r_offset / sizeof(struct bpf_insn);
+            if (idx < ninsns) insn_map_idx[idx] = m;
+        }
+    }
+}
 
 static int run(const char *filename) {
     int fd = open(filename, O_RDONLY);
@@ -1085,11 +1750,48 @@ static int run(const char *filename) {
     Elf64_Shdr *shdr = (Elf64_Shdr *)((char *)data + ehdr->e_shoff);
     char *shstrtab = (char *)data + shdr[ehdr->e_shstrndx].sh_offset;
 
+    /* Symbol table, needed to name the legacy `maps` entries and to resolve
+       the map relocations on the program section. */
+    Elf64_Sym *syms = NULL;
+    size_t nsyms = 0;
+    char *strtab = NULL;
+    for (int i = 0; i < ehdr->e_shnum; i++) {
+        if (shdr[i].sh_type != SHT_SYMTAB) continue;
+        syms = (Elf64_Sym *)((char *)data + shdr[i].sh_offset);
+        nsyms = shdr[i].sh_size / sizeof(Elf64_Sym);
+        if (shdr[i].sh_link < ehdr->e_shnum)
+            strtab = (char *)data + shdr[shdr[i].sh_link].sh_offset;
+        break;
+    }
+
+    /* Maps, from whichever declaration style the object uses. */
+    for (int i = 0; i < ehdr->e_shnum; i++) {
+        char *name = shstrtab + shdr[i].sh_name;
+        if (shdr[i].sh_size == 0) continue;
+        if (!strcmp(name, "maps") && syms && strtab)
+            discover_legacy_maps((char *)data + shdr[i].sh_offset,
+                                 shdr[i].sh_size, i, syms, nsyms, strtab);
+        else if (!strcmp(name, ".BTF"))
+            discover_btf_maps((char *)data + shdr[i].sh_offset, shdr[i].sh_size);
+    }
+    qsort(map_tbl, (size_t)nmaps, sizeof(MapInfo), map_name_cmp);
+
     for (int i = 0; i < ehdr->e_shnum; i++) {
         char *name = shstrtab + shdr[i].sh_name;
         if (shdr[i].sh_size == 0) continue;
         if (!(shdr[i].sh_flags & SHF_EXECINSTR) &&
             !strstr(name, "text") && !strstr(name, "xdp")) continue;
+
+        ctx_layout = ctx_override ? ctx_override : ctx_layout_for(name);
+        if (!ctx_layout) {
+            fprintf(stderr, "bpf_to_ir: section %s: no context layout is known "
+                            "for this program type; the ctx region would be the "
+                            "wrong size and every field access an overrun.  "
+                            "Pass --ctx=xdp_md or --ctx=__sk_buff to say which "
+                            "it is.\n", name);
+            free(data);
+            return -1;
+        }
 
         struct bpf_insn *insns = (struct bpf_insn *)((char *)data + shdr[i].sh_offset);
         size_t num = shdr[i].sh_size / sizeof(struct bpf_insn);
@@ -1099,6 +1801,10 @@ static int run(const char *filename) {
             free(data);
             return -1;
         }
+
+        for (size_t k = 0; k <= MAX_INSNS; k++) insn_map_idx[k] = -1;
+        if (syms && strtab)
+            load_map_relocs(data, shdr, ehdr->e_shnum, i, syms, nsyms, strtab, num);
 
         sv_init(&modules);
         translate_program(insns, num);
@@ -1113,14 +1819,34 @@ static int run(const char *filename) {
     return -1;
 }
 
+static void usage(const char *prog) {
+    fprintf(stderr, "usage: %s [--ctx=xdp_md|__sk_buff] <bpf_object_file>\n",
+            prog);
+    fprintf(stderr, "Writes a Caracara GeneralCaracaraProgram s-expression "
+                    "to stdout.\n");
+    fprintf(stderr, "  --ctx=NAME  which struct the program's context is, for "
+                    "objects whose\n              section name does not say "
+                    "(default: inferred from it).\n");
+}
+
 int main(int argc, char **argv) {
-    if (argc != 2) {
-        fprintf(stderr, "usage: %s <bpf_object_file>\n", argv[0]);
-        fprintf(stderr, "Writes a Caracara GeneralCaracaraProgram s-expression "
-                        "to stdout.\n");
-        return 1;
+    const char *file = NULL;
+    for (int i = 1; i < argc; i++) {
+        if (!strncmp(argv[i], "--ctx=", 6)) {
+            ctx_override = ctx_layout_by_name(argv[i] + 6);
+            if (!ctx_override) {
+                fprintf(stderr, "bpf_to_ir: unknown context '%s'\n", argv[i] + 6);
+                return 1;
+            }
+        } else if (!file) {
+            file = argv[i];
+        } else {
+            usage(argv[0]);
+            return 1;
+        }
     }
-    if (run(argv[1]) != 0) return 1;
+    if (!file) { usage(argv[0]); return 1; }
+    if (run(file) != 0) return 1;
     if (had_error) {
         fprintf(stderr, "bpf_to_ir: translation is incomplete; "
                         "the output does not faithfully model the input\n");
