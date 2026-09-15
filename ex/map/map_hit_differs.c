@@ -8,8 +8,8 @@ SEC("xdp") int prog(struct xdp_md *ctx)
     __u32 key = ctx->ingress_ifindex;
     __u64 *v = bpf_map_lookup_elem(&counters, &key);
     if (!v)
-        return 1;
+        return XDP_DROP;
     if (*v > 101)
-        return 2;
+        return XDP_PASS;
     return 0;
 }

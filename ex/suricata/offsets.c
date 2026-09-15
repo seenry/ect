@@ -28,3 +28,9 @@ char _skb_cb   [__builtin_offsetof(struct __sk_buff, cb)       == 48 ? 1 : -1];
 char _skb_hash [__builtin_offsetof(struct __sk_buff, hash)     == 68 ? 1 : -1];
 char _skb_data [__builtin_offsetof(struct __sk_buff, data)     == 76 ? 1 : -1];
 char _skb_dend [__builtin_offsetof(struct __sk_buff, data_end) == 80 ? 1 : -1];
+
+/* Map type constants.  These decide which FAMILY the translator models a map
+   as, and the families disagree about what a key means -- an array's in-range
+   lookup can never miss, a hash's can.  A wrong value here silently changes
+   what the program means, exactly like a wrong field offset. */
+char _t_percpu_hash[BPF_MAP_TYPE_PERCPU_HASH == 5 ? 1 : -1];

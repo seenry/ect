@@ -1,0 +1,4 @@
+# Test-only dependencies.  The tools themselves need nothing beyond the
+# standard library.
+hypothesis>=6
+pytest>=8

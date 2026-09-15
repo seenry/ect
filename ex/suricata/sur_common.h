@@ -18,7 +18,7 @@ typedef unsigned long long __u64;
 #define __always_inline inline __attribute__((always_inline))
 #define offsetof(t, m) __builtin_offsetof(t, m)
 
-#define BPF_MAP_TYPE_PERCPU_HASH 6
+#define BPF_MAP_TYPE_PERCPU_HASH 5
 #define ETH_HLEN        14
 #define ETH_P_IP        0x0800
 #define ETH_P_IPV6      0x86DD
