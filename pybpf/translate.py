@@ -3,7 +3,13 @@
 See README.md for the program shape, the memory model, the control-flow
 scheme and the map model.  The short version:
 
-  parser (module 1) -> T_0 -> T_1 -> ... -> deparser (module 2)
+  T_0 -> T_1 -> ... -> deparser (module 2)
+
+The network has no parser module: eBPF reaches its packet through a computed
+pointer, which a P4-style parser cannot express, so nothing a parser would do
+(extract headers from packet bytes) applies here, and the well-formedness of
+a ModuleNetwork places no constraint on the start module -- see the comment
+on `wf_module_network` in CrModule.v.  T_0 is the network's source instead.
 
 Each basic block becomes one transformer guarded on a program-counter header;
 sequencing comes from the module chain, because a transformer runs only the
@@ -79,7 +85,6 @@ BPF_FUNC_map_update_elem = 2    # BPF_ANY only; see emit_map_update
 # traps, so a program that ignores the result carries on.
 E2BIG = 7
 
-MOD_PARSER = 1
 MOD_DEPARSER = 2
 MOD_FIRST_XFRM = 10
 
@@ -1839,21 +1844,17 @@ class Translator:
                     [rule([self.pc_entry(BLOCK_PC(start))], self.ops.ops)])
 
     def emit_program(self, out):
-        # Parser: a single accepting state that extracts nothing.  The IR
-        # packet is unused, but a network needs a parser source.
-        parser = ("(ParserModule %d ((parser_start 1) (parser_states "
-                  "(Coq_cons ((psd_label 1) (psd_action None) "
-                  "(psd_trans (Unconditional Accept))) Coq_nil))))" % MOD_PARSER)
+        # No parser module: T_0 (module MOD_FIRST_XFRM) is the network's
+        # source directly.  See the module docstring.
         # Deparser: emit r0, which is what an eBPF program returns -- 32 bits
         # of it, since a BPF return value is a u32.
         deparser = ("(DeparserModule %d (Coq_cons (EmitOpConstructor %d 32) "
                     "Coq_nil))" % (MOD_DEPARSER, H_REG(0)))
 
-        all_mods = [parser] + self.modules + [deparser]
+        all_mods = self.modules + [deparser]
 
-        edges = ["(%d %d)" % (MOD_PARSER, MOD_FIRST_XFRM)]
-        edges += ["(%d %d)" % (m, m + 1)
-                  for m in range(MOD_FIRST_XFRM, self.next_mod - 1)]
+        edges = ["(%d %d)" % (m, m + 1)
+                 for m in range(MOD_FIRST_XFRM, self.next_mod - 1)]
         edges.append("(%d %d)" % (self.next_mod - 1, MOD_DEPARSER))
 
         # Regions: ctx, the packet, and one per declared map.  The checker
@@ -1872,7 +1873,7 @@ class Translator:
         out.write("  %s\n" % coq_list(regions))
         out.write("  ((net_modules %s)\n" % coq_list(all_mods))
         out.write("   (net_edges (%s))\n" % " ".join(edges))
-        out.write("   (start_module %d)))\n" % MOD_PARSER)
+        out.write("   (start_module %d)))\n" % MOD_FIRST_XFRM)
 
     # ── driving it from an object file ──────────────────────────────────
     def load_map_relocs(self, elf, sec_index, ninsns):
