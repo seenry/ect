@@ -95,10 +95,14 @@ PYSRC     := $(wildcard pybpf/*.py)
 $(EX_OBJ) $(CHECK_OBJ): $(EX_HDR)
 
 # -g to get kv sizes of `struct { __uint(...); } SEC(".maps")`.
+#
+# The level goes to llc as well as clang.  llc's codegen defaults to -O2, so
+# without it a ".O0" object was -O0 IR put through -O2 instruction selection
+# and register allocation -- not an unoptimized build.
 define compile_at
 %.$(1).o: %.c
 	$$(CLANG) -target bpf -$(1) -g $$(INC) -emit-llvm -c $$< -o $$@.bc
-	$$(LLC) -mtriple=bpf -mcpu=probe -filetype=obj -o $$@ $$@.bc
+	$$(LLC) -$(1) -mtriple=bpf -mcpu=probe -filetype=obj -o $$@ $$@.bc
 	@rm -f $$@.bc
 endef
 $(foreach o,O0 $(OPTS),$(eval $(call compile_at,$(o))))
